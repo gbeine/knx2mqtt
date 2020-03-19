@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# Installation script for knx2mqtt and its dependencies
+#
+# (c) Gerrit Beine, 2019
+#
+  
+python3 -m venv .
+
+. bin/activate
+pip install paho.mqtt pyyaml xknx
+pip install -e knx2mqtt

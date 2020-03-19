@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# This file should be executed by supervisord
+#
+# (c) Gerrit Beine, 2019
+#
+
+touch ${LOGDIR}/.tmpfs
+
+. bin/activate
+
+exec bin/knx2mqtt
+

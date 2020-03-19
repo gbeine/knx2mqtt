@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+from knx2mqtt import config
+from knx2mqtt import daemon
+
+def main():
+	cfg = config.Config()
+	cfg.read()
+	d = daemon.Daemon(cfg)
+	d.run()
+	
+main()
+

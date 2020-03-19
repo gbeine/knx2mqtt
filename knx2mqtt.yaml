@@ -1,0 +1,32 @@
+mqtt:
+    host: your.mqtt-server.name
+    port: 1883
+    user: knx2mqtt
+    password: topsecret
+    topic: "home/bus/knx"
+    qos: 0
+    retain: true
+knx:
+    sensors:
+        - address: 0/0/1
+          type: DPTDate
+          expose: true
+        - address: 0/0/2
+          type: DPTTime
+          expose: true
+        - address: 0/0/3
+          type: DPTDateTime
+          expose: true
+        - address: 0/0/4
+          type: DPTTemperature
+          expose: true
+        - address: 1/0/0
+          type: DPTTemperature
+        - address: 1/0/1
+          type: DPTHumidity
+        - address: 1/0/2
+          type: DPTPartsPerMillion
+    switches:
+        - address: 0/1/1
+          type: DPTBinary
+          subscribe: true

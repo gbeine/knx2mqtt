@@ -1,0 +1,7 @@
+general:
+    own_address: '15.15.249'
+connection:
+    tunneling:
+        gateway_ip: 192.168.0.11
+        gateway_port: 3671
+        local_ip: 192.168.0.12

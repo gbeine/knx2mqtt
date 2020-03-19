@@ -1,0 +1,6 @@
+__pycache__
+bin
+lib
+pip-selfcheck.json
+pyvenv.cfg
+knx2mqtt/knx2mqtt.egg-info
