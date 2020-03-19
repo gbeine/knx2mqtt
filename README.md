@@ -111,3 +111,7 @@ The `run` script expects an environment variable named `LOGDIR` where the logfil
 
 I have not the time (yet) to provide professional support for this project.
 But feel free to submit issues and PRs, I'll check for it and honor your contributions.
+
+## License
+
+The whole project is licensed under MIT license. Stay fair.
