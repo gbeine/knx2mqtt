@@ -8,5 +8,5 @@
 python3 -m venv .
 
 . bin/activate
-pip install paho.mqtt pyyaml xknx
+pip install -r requirements.txt
 pip install -e knx2mqtt

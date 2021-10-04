@@ -1,0 +1,4 @@
+# Python requirements
+paho.mqtt
+pyyaml
+xknx
