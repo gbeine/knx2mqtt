@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!python3
 
 from knx2mqtt import config
 from knx2mqtt import daemon
