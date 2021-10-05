@@ -7,6 +7,21 @@ mqtt:
     qos: 0
     retain: true
 knx:
+    general:
+        own_address: '15.15.249'
+        #address_format: long
+        #rate_limit: 200
+        #multicast_group: '224.0.23.12'
+        #multicast_port: 3671
+    connection:
+        #routing:
+            #local_ip: 192.168.0.12
+        tunneling:
+            gateway_ip: '192.168.0.11'
+            gateway_port: 3671
+            local_ip: '192.168.0.12'
+            #local_port: 12399
+            #route_back: True
     sensors:
         - address: 0/0/1
           type: DPTDate
