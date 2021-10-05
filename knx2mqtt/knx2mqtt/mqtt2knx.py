@@ -2,7 +2,9 @@ import traceback
 import logging
 import importlib
 
-from xknx.knx import GroupAddress, DPTBinary, DPTArray
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.telegram import GroupAddress
+XKNX_DPT_MODULE_STR = "xknx.dpt"
 
 class mqtt2knx:
 
@@ -39,7 +41,7 @@ class mqtt2knx:
 				elif dpttype == "DPTBinary":
 					value = DPTBinary(int(payload))
 				else:
-					dptcls = getattr(importlib.import_module("xknx.knx"), dpttype)
+					dptcls = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpttype)
 					value = DPTArray(dptcls.to_knx(payload))
 
 				group_address = GroupAddress(address)

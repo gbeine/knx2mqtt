@@ -1,6 +1,8 @@
 import traceback
 import logging
 import importlib
+XKNX_DPT_MODULE_STR = "xknx.dpt"
+
 
 class knx2mqtt:
 
@@ -27,7 +29,7 @@ class knx2mqtt:
 				value = payload.value
 			else:
 				logging.debug("{0} {1}".format(group_address, dpttype))
-				dptcls = getattr(importlib.import_module("xknx.knx"), dpttype)
+				dptcls = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpttype)
 				value = dptcls.from_knx(payload.value)
 
 			logging.debug("{0} {1}".format(payload, value))

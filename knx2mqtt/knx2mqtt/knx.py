@@ -2,7 +2,9 @@ import logging
 import asyncio
 
 from xknx import XKNX
-from xknx.knx import AddressFilter, GroupAddress, Telegram, TelegramType, TelegramDirection
+from xknx.io import ConnectionConfig, ConnectionType
+from xknx.telegram import AddressFilter, GroupAddress, GroupAddressType, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueWrite
 
 class Knx:
 
@@ -23,7 +25,31 @@ class Knx:
 
 
 	def connect(self):
-		self._xknx = XKNX()
+		# General configuration for xknx
+		gen_params = {}
+		if 'general' in self._config:
+			gen_params = self._config['general']
+			if 'address_format' in gen_params:
+				addr_format_str = str(gen_params['address_format']).upper()
+				gen_params['address_format'] = GroupAddressType[addr_format_str]
+				logging.debug("KNX address format is {0}".format(gen_params['address_format']))			
+
+		# Connection configuation
+		conn_type = ConnectionType.AUTOMATIC
+		conn_params = {}
+		if 'connection' in self._config:
+			if 'routing' in self._config['connection']:
+				conn_type = ConnectionType.ROUTING
+				conn_params = self._config['connection']['routing']
+			elif 'tunneling' in self._config['connection']:
+				conn_type = ConnectionType.TUNNELING
+				conn_params = self._config['connection']['tunneling']
+				
+		conn_config = ConnectionConfig(**conn_params, connection_type=conn_type)
+		logging.debug("KNX connection type is {0}".format(conn_type))
+
+		# Setup XKNX
+		self._xknx = XKNX(**gen_params, daemon_mode=True, connection_config=conn_config)
 
 
 	def set_telegram_cb(self, cb):
@@ -44,10 +70,12 @@ class Knx:
 
 	def publish(self, group_address, payload):
 		logging.debug("Try to publish payload {0} for group address {1}".format(payload, group_address))
-		telegram = Telegram(direction=TelegramDirection.OUTGOING)
-		telegram.group_address = group_address
-		telegram.telegramtype = TelegramType.GROUP_WRITE
-		telegram.payload = payload
+
+		telegram = Telegram(
+			direction = TelegramDirection.OUTGOING,
+            destination_address = group_address,
+            payload = GroupValueWrite(payload),
+        )
 
 		logging.debug(telegram)
 
@@ -64,5 +92,5 @@ class Knx:
 
 
 	async def run(self):
-		await self._xknx.start(daemon_mode=True)
+		await self._xknx.start()
 		await self._xknx.stop()
