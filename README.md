@@ -88,7 +88,7 @@ knx:
             gateway_port: 3671
             local_ip: '192.168.0.12'
             #local_port: 12399
-            #route_back: False
+            #route_back: false
 ```
 If you are going to use knx2mqtt in a container, check the related section for configuration details.
 
