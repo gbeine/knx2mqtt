@@ -2,12 +2,13 @@
 
 I've created this project as a replacement for the KNX integration of [HomeAssistant](https://home-assistant.io/) that worked not stable in my environment.
 
-It is quite simple and does what it's name says: It works as a bridge between KNX and MQTT tranlating messages between these in both directions.
+It is quite simple and does what it's name says: It works as a bridge between KNX and MQTT translating messages between these in both directions.
+It can also perfectly be used to route KNX messages between several KNX installations, e.g., if you have an indoor and an outdoor setup.
 
 ## Installation
 
 ### Native environment
-The installation required Python 3.7 (it should work with Python 3.5 and 3.6 as well) and `git`.
+The installation requires minimum Python 3.8 and `git`.
 
 I usually install my own services under `/opt/services`.
 So, it works out of the box, if you just do:
