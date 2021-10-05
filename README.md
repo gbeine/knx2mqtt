@@ -6,6 +6,7 @@ It is quite simple and does what it's name says: It works as a bridge between KN
 
 ## Installation
 
+### Native environment
 The installation required Python 3.7 (it should work with Python 3.5 and 3.6 as well) and `git`.
 
 I usually install my own services under `/opt/services`.
@@ -22,14 +23,29 @@ cd knx2mqtt
 The `install` script creates a virtual python environment using the `venv` module.
 All required libraries are installed automatically.
 
+### Docker environment
+To run the app in a container, you need to have a running Docker installation.
+You can either build the container manually or use the provided `docker-compose` file.  
+
+Using plain docker:
+```
+(...)
+cd knx2mqtt
+docker build -t knx2mqtt .
+```
+
+Using docker-compose, the image build process is covered automatically. 
+If you want to trigger the build manually, run:
+```
+(...)
+cd knx2mqtt
+docker-compose build
+```
+
 ## Configuration
 
-There are two configuration files: `xnkx.yaml` and `knx2mqtt.yaml`.
-
-The first one is for the [xknx](https://xknx.io/) library.
-An example is included, more details you will find in the [xknx documentation](https://xknx.io/configuration).
-
-The `knx2mqtt.yaml` is where the magic happens.
+There is one configuration file: `knx2mqtt.yaml`.
+It is where the magic happens. It contains the configuration for KNX and MQTT.
 
 ### MQTT
 
@@ -52,7 +68,29 @@ Leave `qos` and `retain` unless you know what these parameters do.
 
 ### KNX
 
-Then you can configure your KNX bus topology.
+Then you can configure your KNX bus topology.  
+
+First, you need to configure your KNX gateway.
+```
+knx:
+    general:
+        own_address: '15.15.249'
+        #address_format: long
+        #rate_limit: 200
+        #multicast_group: '224.0.23.12'
+        #multicast_port: 3671
+    connection:
+        #routing:
+            #local_ip: 192.168.0.12
+        tunneling:
+            gateway_ip: '192.168.0.11'
+            gateway_port: 3671
+            local_ip: '192.168.0.12'
+            #local_port: 12399
+            #route_back: False
+```
+If you are going to use knx2mqtt in a container, check the related section for configuration details.
+
 At the moment the bridge supports sensors and switches.
 
 ```
@@ -91,13 +129,31 @@ knx:
           subscribe: true
 ```
 
+#### KNX configuration for container
+When running the app in a container, you need to configure the KNX library accordingly.
+Set ‘route_back’ to True or use host network mode.
+```
+knx:
+    connection:
+        tunneling:
+            gateway_ip: '192.168.0.11'
+            #gateway_port: 3671
+            local_port: 12399
+            route_back: True
+```
+The port `12399/udp` is exposed by the container.
+
+
 ### Publishing
 
 All values are published using the group address and the MQTT topic.
 
 So, the Date exposing sensor in the example is listening for `home/bus/knx/0/0/1` and the switch is listening on and publishing to `home/bus/knx/0/1/1`.
 
+
 ## Running knx2mqtt
+
+### Run as native app
 
 I use [Supervisor](http://supervisord.org/) to manage my local services.
 
@@ -106,6 +162,23 @@ For this, a configuration file and an executable are part of the project.
 The configuration file is located under `supervisor`, just copy or link it to `/etc/supervisor/conf.d`.
 
 The `run` script expects an environment variable named `LOGDIR` where the logfile should be written. This is set by the supervisor configuration, so change it there.
+
+### Run as container
+
+You can either run the container manually or use the provided `docker-compose` file.  
+
+The configuration file `knx2mqtt.yaml` must be mounted into the container at `/app/knx2mqtt.yaml`, otherwise the container won't start.
+
+Using plain docker:
+```
+docker run --rm --name knx2mqtt -v $PWD/knx2mqtt.yaml:/app/knx2mqtt.yaml knx2mqtt
+```
+
+Using docker-compose adjust your settings in `docker-compose.yaml` first. Then run:
+```
+cd knx2mqtt
+docker-compose up -d
+```
 
 ## Support
 
