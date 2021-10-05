@@ -8,4 +8,4 @@ services:
     restart: 'unless-stopped'
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./knx2mqtt.yaml:/app/knx2mqtt.yaml
+      - ./knx2mqtt.yaml:/config/knx2mqtt.yaml

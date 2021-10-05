@@ -1,13 +1,26 @@
 #!python3
 
+import argparse
+
 from knx2mqtt import config
 from knx2mqtt import daemon
 
+
 def main():
+	# Parse command line arguments
+	parser = argparse.ArgumentParser(description='A KNX2MQTT Bridge allowing bidirectional telegram transfer')
+	parser.add_argument('-c', '--config', type=str, help='path to a knx2mqtt configuration file')
+	args = parser.parse_args()
+
+	# Convert args to user config
+	user_cfg = {}
+	if args.config:
+		user_cfg.update({'file': args.config})
+
+	# Setup app
 	cfg = config.Config()
-	cfg.read()
+	cfg.read(**user_cfg)
 	d = daemon.Daemon(cfg)
 	d.run()
 	
 main()
-

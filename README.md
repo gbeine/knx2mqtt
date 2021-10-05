@@ -168,7 +168,7 @@ The `run` script expects an environment variable named `LOGDIR` where the logfil
 
 You can either run the container manually or use the provided `docker-compose` file.  
 
-The configuration file `knx2mqtt.yaml` must be mounted into the container at `/app/knx2mqtt.yaml`, otherwise the container won't start.
+The configuration file `knx2mqtt.yaml` must be mounted into the container at `/config/knx2mqtt.yaml`, otherwise the container won't start.
 
 Using plain docker:
 ```

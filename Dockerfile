@@ -1,6 +1,7 @@
 FROM python:3-alpine
 
 ENV LOGDIR="/var/log/knx2mqtt"
+ENV CONFIG_FILE="/config/knx2mqtt.yaml"
 ENV KNX_LOCAL_PORT=12399
 
 COPY . /app
@@ -18,4 +19,4 @@ RUN mkdir -p $LOGDIR
 RUN rm knx2mqtt.yaml
 
 EXPOSE $KNX_LOCAL_PORT/udp
-CMD ["/bin/sh", "-c", "touch $LOGDIR/.tmpfs && python3 bin/knx2mqtt"]
+CMD ["/bin/sh", "-c", "touch $LOGDIR/.tmpfs && python3 bin/knx2mqtt -c $CONFIG_FILE"]

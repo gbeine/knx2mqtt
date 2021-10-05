@@ -26,7 +26,8 @@ class Config:
 				self._parse_mqtt(config)
 				self._parse_knx(config)
 		except FileNotFoundError as ex:
-			logging.error("Error while reading %s: %s", file, ex)
+			logging.error("Configuration file %s not found: %s", file, ex)
+			exit(ex.errno)
 
 
 	def _parse_mqtt(self, config):
