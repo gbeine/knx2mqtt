@@ -2,14 +2,15 @@ import yaml
 import logging
 import logging.config
 
+
 class Config:
 	"""Class for parsing knx2mqtt.yaml."""
 	
 	def __init__(self):
 		"""Initialize Config class."""
-#		logging.config.dictConfig(yaml.load('logging.conf'))
+#		logging.config.dictConfig(yaml.load('logging.conf', Loader=yaml.SafeLoader))
 		with open('logging.conf') as f:
-			D = yaml.load(f)
+			D = yaml.load(f, Loader=yaml.SafeLoader)
 			D.setdefault('version', 1)
 			logging.config.dictConfig(D)
 		self._mqtt = {}
@@ -21,7 +22,7 @@ class Config:
 		logging.debug("Reading %s", file)
 		try:
 			with open(file, 'r') as filehandle:
-				config = yaml.load(filehandle)
+				config = yaml.load(filehandle, Loader=yaml.SafeLoader)
 				self._parse_mqtt(config)
 				self._parse_knx(config)
 		except FileNotFoundError as ex:
