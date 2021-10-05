@@ -1,6 +1,7 @@
 FROM python:3-alpine
 
 ENV LOGDIR="/var/log/knx2mqtt"
+ENV KNX_LOCAL_PORT=12399
 
 COPY . /app
 
@@ -16,5 +17,5 @@ RUN mkdir -p $LOGDIR
 # Remove default config file -> require mount
 RUN rm knx2mqtt.yaml
 
-EXPOSE 12399/udp
+EXPOSE $KNX_LOCAL_PORT/udp
 CMD ["/bin/sh", "-c", "touch $LOGDIR/.tmpfs && python3 bin/knx2mqtt"]
