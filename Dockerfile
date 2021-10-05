@@ -16,4 +16,5 @@ RUN mkdir -p $LOGDIR
 # Remove default config file -> require mount
 RUN rm knx2mqtt.yaml
 
+EXPOSE 12399/udp
 CMD ["/bin/sh", "-c", "touch $LOGDIR/.tmpfs && python3 bin/knx2mqtt"]
