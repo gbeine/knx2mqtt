@@ -6,15 +6,19 @@ import logging.config
 class Config:
 	"""Class for parsing knx2mqtt.yaml."""
 	
-	def __init__(self):
+	def __init__(self, file='logging.conf'):
 		"""Initialize Config class."""
-#		logging.config.dictConfig(yaml.load('logging.conf', Loader=yaml.SafeLoader))
-		with open('logging.conf') as f:
-			D = yaml.load(f, Loader=yaml.SafeLoader)
-			D.setdefault('version', 1)
-			logging.config.dictConfig(D)
-		self._mqtt = {}
-		self._knx = {}
+		logging.debug("Reading %s", file)
+		try:
+			with open(file, 'r') as f:
+				D = yaml.load(f, Loader=yaml.SafeLoader)
+				D.setdefault('version', 1)
+				logging.config.dictConfig(D)
+			self._mqtt = {}
+			self._knx = {}
+		except FileNotFoundError as ex:
+			logging.error("Logging configuration file %s not found: %s", file, ex)
+			exit(ex.errno)
 	
 	
 	def read(self, file='knx2mqtt.yaml'):

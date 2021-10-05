@@ -10,16 +10,21 @@ def main():
 	# Parse command line arguments
 	parser = argparse.ArgumentParser(description='A KNX2MQTT Bridge allowing bidirectional telegram transfer')
 	parser.add_argument('-c', '--config', type=str, help='path to a knx2mqtt configuration file')
+	parser.add_argument('-l', '--logconfig', type=str, help='path to a logging configuration file')
 	args = parser.parse_args()
 
 	# Convert args to user config
 	user_cfg = {}
+	if args.logconfig:
+		user_cfg.update({'file': args.logconfig})
+
+	user_read_cfg = {}
 	if args.config:
-		user_cfg.update({'file': args.config})
+		user_read_cfg.update({'file': args.config})
 
 	# Setup app
-	cfg = config.Config()
-	cfg.read(**user_cfg)
+	cfg = config.Config(**user_cfg)
+	cfg.read(**user_read_cfg)
 	d = daemon.Daemon(cfg)
 	d.run()
 	
