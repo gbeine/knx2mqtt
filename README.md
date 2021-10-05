@@ -54,13 +54,13 @@ First, you need to configure your MQTT server.
 
 ```
 mqtt:
-    host: your.mqtt-server.name
-    port: 1883
-    user: knx2mqtt
-    password: topsecret
-    topic: "home/bus/knx"
-    qos: 0
-    retain: true
+  host: your.mqtt-server.name
+  port: 1883
+  user: knx2mqtt
+  password: topsecret
+  topic: "home/bus/knx"
+  qos: 0
+  retain: true
 ```
 
 Usually, you only need to change the `host`, `user` and `password`.
@@ -74,21 +74,21 @@ Then you can configure your KNX bus topology.
 First, you need to configure your KNX gateway.
 ```
 knx:
-    general:
-        own_address: '15.15.249'
-        #address_format: long
-        #rate_limit: 200
-        #multicast_group: '224.0.23.12'
-        #multicast_port: 3671
-    connection:
-        #routing:
-            #local_ip: 192.168.0.12
-        tunneling:
-            gateway_ip: '192.168.0.11'
-            gateway_port: 3671
-            local_ip: '192.168.0.12'
-            #local_port: 12399
-            #route_back: false
+  general:
+    own_address: '15.15.249'
+    #address_format: long
+    #rate_limit: 200
+    #multicast_group: '224.0.23.12'
+    #multicast_port: 3671
+  connection:
+    #routing:
+      #local_ip: 192.168.0.12
+    tunneling:
+      gateway_ip: '192.168.0.11'
+      gateway_port: 3671
+      local_ip: '192.168.0.12'
+      #local_port: 12399
+      #route_back: false
 ```
 If you are going to use knx2mqtt in a container, check the related section for configuration details.
 
@@ -96,10 +96,10 @@ At the moment the bridge supports sensors and switches.
 
 ```
 knx:
-    sensors:
-    ...
-    switches:
-    ...
+  sensors:
+  ...
+  switches:
+  ...
 ```
 
 Each item (sensors and switches) need an `address` (the group address) and a `type`.
@@ -114,20 +114,20 @@ If `expose` is `true`, values published on MQTT will be sent as telegram to KNX.
 
 ```
 knx:
-    sensors:
-        - address: 0/0/1
-          type: DPTDate
-          expose: true
+  sensors:
+    - address: 0/0/1
+      type: DPTDate
+      expose: true
 ```
 
 If `subscribe` is `true`, the bridge works in bidirectional mode. Values from KNX are published to MQTT and vice versa.
 
 ```
 knx:
-    switches:
-        - address: 0/1/1
-          type: DPTBinary
-          subscribe: true
+  switches:
+    - address: 0/1/1
+      type: DPTBinary
+      subscribe: true
 ```
 
 #### KNX configuration for container
@@ -135,12 +135,12 @@ When running the app in a container, you need to configure the KNX library accor
 Set ‘route_back’ to True or use host network mode.
 ```
 knx:
-    connection:
-        tunneling:
-            gateway_ip: '192.168.0.11'
-            #gateway_port: 3671
-            local_port: 12399
-            route_back: True
+  connection:
+    tunneling:
+      gateway_ip: '192.168.0.11'
+      #gateway_port: 3671
+      local_port: 12399
+      route_back: True
 ```
 The port `12399/udp` is exposed by the container.
 
