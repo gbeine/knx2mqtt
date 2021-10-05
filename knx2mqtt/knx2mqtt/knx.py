@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import socket
 
 from xknx import XKNX
 from xknx.io import ConnectionConfig, ConnectionType
@@ -44,6 +45,9 @@ class Knx:
 			elif 'tunneling' in self._config['connection']:
 				conn_type = ConnectionType.TUNNELING
 				conn_params = self._config['connection']['tunneling']
+
+				# Resolve gateway ip, if needed
+				conn_params['gateway_ip'] = socket.gethostbyname(conn_params['gateway_ip'])
 				
 		conn_config = ConnectionConfig(**conn_params, connection_type=conn_type)
 		logging.debug("KNX connection type is {0}".format(conn_type))

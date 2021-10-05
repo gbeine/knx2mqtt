@@ -34,32 +34,49 @@ class Config:
 		"""Parse the mqtt section of knx2mqtt.yaml."""
 		if "mqtt" in config:
 			self._mqtt = config["mqtt"]
-		if not "host" in self._mqtt:
-			raise ValueError("MQTT host not set")
-		if not "port" in self._mqtt:
-			raise ValueError("MQTT port not set")
-		if not "user" in self._mqtt:
-			raise ValueError("MQTT user not set")
-		if not "password" in self._mqtt:
-			raise ValueError("MQTT password not set")
-		if not "topic" in self._mqtt:
-			raise ValueError("MQTT topic not set")
-		if not "qos" in self._mqtt:
-			self._mqtt["qos"] = 0
-		if not "retain" in self._mqtt:
-			self._mqtt["retain"] = False
+
+			if not "host" in self._mqtt:
+				raise ValueError("MQTT host not set")
+			if not "port" in self._mqtt:
+				raise ValueError("MQTT port not set")
+			if not "user" in self._mqtt:
+				raise ValueError("MQTT user not set")
+			if not "password" in self._mqtt:
+				raise ValueError("MQTT password not set")
+			if not "topic" in self._mqtt:
+				raise ValueError("MQTT topic not set")
+			if not "qos" in self._mqtt:
+				self._mqtt["qos"] = 0
+			if not "retain" in self._mqtt:
+				self._mqtt["retain"] = False
+
+		else:
+			logging.error("MQTT configuration not found in configuration file.")
+			exit(1)
 
 
 	def _parse_knx(self, config):
 		"""Parse the knx section of knx2mqtt.yaml."""
 		if "knx" in config:
 			self._knx = config["knx"]
-		for item in self._knx["sensors"]:
-			if not "address" in item:
-				raise ValueError("Missing address for KNX sensor")
-		for item in self._knx["switches"]:
-			if not "address" in item:
-				raise ValueError("Missing address for KNX switch")
+
+			if "sensors" in self._knx:
+				for item in self._knx["sensors"]:
+					if not "address" in item:
+						raise ValueError("Missing address for KNX sensor")
+			else:
+				self._knx["sensors"] = []
+
+			if "switches" in self._knx:
+				for item in self._knx["switches"]:
+					if not "address" in item:
+						raise ValueError("Missing address for KNX switch")
+			else:
+				self._knx["switches"] = []
+
+		else:
+			logging.error("KNX configuration not found in configuration file.")
+			exit(1)
 
 
 	def mqtt(self):
