@@ -54,6 +54,7 @@ First, you need to configure your MQTT server.
 
 ```
 mqtt:
+  client_id: knx2mqtt
   host: your.mqtt-server.name
   port: 1883
   user: knx2mqtt
@@ -61,6 +62,7 @@ mqtt:
   topic: "home/bus/knx"
   qos: 0
   retain: true
+  keepalive: 60
 ```
 
 Usually, you only need to change the `host`, `user` and `password`.

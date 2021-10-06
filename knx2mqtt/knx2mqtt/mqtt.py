@@ -9,8 +9,9 @@ class Mqtt:
 
 
 	def connect(self):
-		self._client = mqtt.Client()
-		self._client.username_pw_set(self._config['user'], self._config['password'])
+		self._client = mqtt.Client(self._config['client_id'])
+		if self._config['user'] or self._config['password']:
+			self._client.username_pw_set(self._config['user'], self._config['password'])
 
 
 	def disconnect(self):
@@ -45,5 +46,5 @@ class Mqtt:
 
 
 	def run(self):
-		self._client.connect(self._config['host'], self._config['port'])
+		self._client.connect(self._config['host'], self._config['port'], keepalive=self._config['keepalive'])
 		self._client.loop_start()

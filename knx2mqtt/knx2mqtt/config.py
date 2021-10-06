@@ -39,20 +39,24 @@ class Config:
 		if "mqtt" in config:
 			self._mqtt = config["mqtt"]
 
+			if not "client_id" in self._mqtt:
+				self._mqtt["port"] = "knx2mqtt"
 			if not "host" in self._mqtt:
 				raise ValueError("MQTT host not set")
 			if not "port" in self._mqtt:
-				raise ValueError("MQTT port not set")
+				self._mqtt["port"] = 1883
 			if not "user" in self._mqtt:
-				raise ValueError("MQTT user not set")
+				self._mqtt["user"] = ""
 			if not "password" in self._mqtt:
-				raise ValueError("MQTT password not set")
+				self._mqtt["port"] = ""
 			if not "topic" in self._mqtt:
 				raise ValueError("MQTT topic not set")
 			if not "qos" in self._mqtt:
 				self._mqtt["qos"] = 0
 			if not "retain" in self._mqtt:
 				self._mqtt["retain"] = False
+			if not "keepalive" in self._mqtt:
+				self._mqtt["keepalive"] = 60
 
 		else:
 			logging.error("MQTT configuration not found in configuration file.")
