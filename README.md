@@ -144,7 +144,15 @@ knx:
       local_port: 12399
       route_back: True
 ```
-The port `12399/udp` is exposed by the container.
+The port `12399/udp` is exposed by the container.  
+  
+You can also use the following environment variables:  
+`LOGDIR` path to log files.  
+`LOGCONFIG_FILE` path to configuration file for logging options (use `/config/logging.production.conf` for producation and `/config/logging.conf` for debugging).  
+`CONFIG_FILE` path to main knx2mqqt configuration file.  
+`KNX_LOCAL_PORT` default local UDP port used by knx2mqtt for KNX gateway communication.  
+  
+The default values are defined in the file `Dockerfile`.
 
 
 ### Publishing
