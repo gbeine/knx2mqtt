@@ -6,6 +6,7 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress
 XKNX_DPT_MODULE_STR = "xknx.dpt"
 
+
 class mqtt2knx:
 
 	def __init__(self, knx, mqtt, states):
@@ -54,6 +55,7 @@ class mqtt2knx:
 
 		except Exception as e:
 			logging.error(traceback.format_exc())
+
 
 	def on_connect(self, client, userdata, flags, rc):
 		try:
