@@ -54,7 +54,7 @@ class Knx:
 
 		# Setup XKNX
 		self._xknx = XKNX(**gen_params, daemon_mode=True, connection_config=conn_config)
-		logging.info("XKNX instance (version %s) for connection to KNX gateway %s created." % (self._xknx.version, conn_config.gateway_ip))
+		logging.info("XKNX instance (version %s) for connection to KNX gateway %s created. KNX address of this instance is %s." % (self._xknx.version, conn_config.gateway_ip, self._xknx.own_address))
 
 
 	def set_telegram_cb(self, cb):
