@@ -81,7 +81,7 @@ class Knx:
             payload = GroupValueWrite(payload),
         )
 
-		logging.debug(telegram)
+		logging.debug("Publishing telegram: {0}".format(telegram))
 
 		if self._xknx.started:
 #			loop = asyncio.new_event_loop()
