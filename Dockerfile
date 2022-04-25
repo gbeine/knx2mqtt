@@ -8,15 +8,16 @@ ENV KNX_LOCAL_PORT=12399
 COPY . /app
 
 WORKDIR /app
-RUN apk add --no-cache gcc musl-dev linux-headers
-RUN pip install -r requirements.txt
-RUN pip install -e knx2mqtt
-RUN apk del gcc musl-dev linux-headers
+RUN apk add --no-cache gcc musl-dev libffi-dev linux-headers \
+    && pip install -r requirements.txt \
+    && pip install -e knx2mqtt \
+    && apk del --purge gcc musl-dev libffi-dev linux-headers \
+    && rm -rf /var/cache/apk/*
 
 # Logging
-RUN mkdir -p /config
-RUN mv logging*.conf /config
-RUN mkdir -p $LOGDIR
+RUN mkdir -p /config \
+    && mv logging*.conf /config \
+    && mkdir -p $LOGDIR
 
 # Remove default config file -> require mount
 RUN rm knx2mqtt.yaml
