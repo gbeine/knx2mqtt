@@ -8,13 +8,12 @@ from xknx.telegram import GroupAddress, Telegram, TelegramDirection
 
 class KNX:
 
-	def __init__(self, config):
-		self._config = config
-		self._subscription_addresses = list() # this list contains all the addresses to subscribe
-		self._publishing_addresses = [] # this dict contains the item configuration for all addresses to publish
+	def __init__(self, items):
+		self._subscription_addresses = [] # this list contains all the addresses to subscribe
+		self._publishing_addresses = [] # this list contains all the addresses to publish
 		self._published_values = {} # this dict contains the last value published to a certain address
 		self._configured_items = {}
-		for item in self._config:
+		for item in items:
 			item_added = False
 			if item.knx_publish():
 				self._add_item_to_publish(item)
