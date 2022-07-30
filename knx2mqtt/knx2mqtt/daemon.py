@@ -1,10 +1,10 @@
 import asyncio
 import time
 
-from knx2mqtt import mqtt
-from knx2mqtt import mqtt2knx
+from knx2mqtt.mqtt import MQTT
 from knx2mqtt.knx import KNX
 from knx2mqtt.knx2mqtt import knx2mqtt
+from knx2mqtt.mqtt2knx import mqtt2knx
 
 class Daemon:
 
@@ -21,7 +21,7 @@ class Daemon:
 		loop.close()
 
 	def _init_mqtt(self):
-		self._mqtt = mqtt.Mqtt(self._config.mqtt())
+		self._mqtt = MQTT(self._config.mqtt(), self._config.items())
 		self._mqtt.connect()
 
 	def _init_knx(self):
@@ -29,5 +29,5 @@ class Daemon:
 		self._knx.connect()
 
 	def _init_callbacks(self):
-		mqtt2knx.mqtt2knx(self._knx, self._mqtt, s)
 		knx2mqtt(self._knx, self._mqtt)
+		mqtt2knx(self._knx, self._mqtt)
