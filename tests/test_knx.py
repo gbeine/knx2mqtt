@@ -23,9 +23,14 @@ class TestKnx(unittest.TestCase):
         ]
         k = KNX(knx_config)
         self.assertEqual(2, len(k._subscription_addresses))
-        self.assertIn('1/0/0', k._subscription_addresses)
-        self.assertIn('1/0/1', k._subscription_addresses)
+        self.assertEqual('1/0/0', str(k._subscription_addresses[0]))
+        self.assertEqual('1/0/1', str(k._subscription_addresses[1]))
 
+    def test_knx_get_payload_from_knx(self):
+        self.assertTrue(False)
+
+    def test_knx_get_payload_to_knx(self):
+        self.assertTrue(False)
 
     def test_knx_publish(self):
         knx_config = [
@@ -40,30 +45,36 @@ class TestKnx(unittest.TestCase):
             })
         ]
         k = KNX(knx_config)
-        k.publish_value = MagicMock()
+        k._publish_value = MagicMock()
 
         self.assertTrue(k.publish('1/0/0', '22.5'))
         self.assertFalse(k.publish('1/0/1', '23.5'))
-        k.publish_value.assert_called_with('1/0/0', ANY)
+        k._publish_value.assert_called_with('1/0/0', ANY)
 
-        calls = k.publish_value.call_args_list
+        calls = k._publish_value.call_args_list
         self.assertEqual('<DPTArray value="[0xc,0x65]" />', str(calls[0][0][1]))
 
-
-    def test_knx_publish_value(self):
+    def test_knx__publish_value(self):
         k = KNX([])
         k.connect()
         k._xknx.telegrams.put = MagicMock()
 
         dpt_value = DPTArray(DPTTemperature.to_knx('23.5'))
-        k.publish_value('4/2/1', dpt_value)
+        k._publish_value('4/2/1', dpt_value)
 
         k._xknx.telegrams.put.assert_called_with(ANY)
 
         calls = k._xknx.telegrams.put.call_args_list
-        expected = '<Telegram direction="Outgoing" source_address="0.0.0" destination_address="4/2/1" payload="<DPTArray value="[0xc,0x97]" />" />'
+        expected = '<Telegram ' \
+                   'direction="Outgoing" ' \
+                   'source_address="0.0.0" ' \
+                   'destination_address="4/2/1" ' \
+                   'payload="<DPTArray value="[0xc,0x97]" />" ' \
+                   '/>'
         self.assertEqual(expected, str(calls[0][0][0]))
 
+    def test_knx__get_dpt_type(self):
+        self.assertTrue(False)
 
 
 if __name__ == '__main__':

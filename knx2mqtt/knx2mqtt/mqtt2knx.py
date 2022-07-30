@@ -8,6 +8,7 @@ from xknx.dpt import DPTBinary, DPTArray
 class mqtt2knx:
 
 	def __init__(self, knx, mqtt):
+		logging.info("KNX2MQTT - initialise mqtt2knx routing")
 		self._knx = knx
 		self._mqtt = mqtt
 		self._mqtt.set_message_cb(self.on_message)
@@ -30,6 +31,7 @@ class mqtt2knx:
 
 		except Exception as e:
 			logging.error(traceback.format_exc())
+
 
 	def on_connect(self, client, userdata, flags, rc):
 		try:
