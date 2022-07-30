@@ -127,7 +127,7 @@ class KNX:
 		telegram.destination_address = group_address
 		telegram.payload = value
 
-		logging.debug(telegram)
+		logging.debug("KNX2MQTT Telegram {0}".format(telegram))
 
 		self._xknx.telegrams.put(telegram)
 
