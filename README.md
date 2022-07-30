@@ -69,9 +69,19 @@ But the examples in the file I provide with the project may fit for the most pur
 
 The default operating mode for an object is to listen on the KNX and publish the telegram values to MQTT.
 
-That may be changed by setting `expose` or `subscribe` to `true`.
+That may be changed using the following settings:
 
-If `expose` is `true`, values published on MQTT will be sent as telegram to KNX. Values from KNX are never published to MQTT.
+* `mqtt_subscribe` (default: false): if set to `true`, changes on any related MQTT topic will be processed
+* `mqtt_publish` (default: true): if set to `true`, the values for this item will be published on all related MQTT topics 
+* `knx_subscribe` (default: true): if set to `true`, changes on any related KNX address will be processed
+* `knx_publish` (default: false): if set to `true`, the values for this item will be published on all related KXN addresses 
+
+To prevent communication loops, the bridge caches all states that have been published.
+If an event for an item is recieved, the bridge checks if the value has changed. 
+The value will be published only to addresses with valued that differ from the current one.
+This works, no matter if the source of the event is MQTT or KNX.
+
+**Attention:** You can still configure loops using the same MQTT topic or KNX address for different things!
 
 ```
 knx:

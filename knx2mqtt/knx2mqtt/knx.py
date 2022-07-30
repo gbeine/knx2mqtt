@@ -1,33 +1,40 @@
-import logging
 import asyncio
+import logging
+import importlib
 
 from xknx import XKNX
-from xknx.knx import AddressFilter, GroupAddress, Telegram, TelegramType, TelegramDirection
+from xknx.dpt.dpt import DPTArray, DPTBinary
+from xknx.telegram import AddressFilter, GroupAddress, Telegram, TelegramDirection
 
-class Knx:
+class KNX:
 
 	def __init__(self, config):
 		self._config = config
-		self._address_filters = list()
-		self._subscription_filters = list()
-		for sensor in self._config['sensors']:
-			if not ('expose' in sensor and sensor['expose']):
-				self._address_filters.append(AddressFilter(sensor['address']))
-			if ('expose' in sensor and sensor['expose']) or ('subscribe' in sensor and sensor['subscribe']):
-				self._subscription_filters.append(sensor['address'])
-		for switch in self._config['switches']:
-			if not ('expose' in switch and switch['expose']):
-				self._address_filters.append(AddressFilter(switch['address']))
-			if ('expose' in switch and switch['expose']) or ('subscribe' in switch and switch['subscribe']):
-				self._subscription_filters.append(switch['address'])
-
+		self._subscription_addresses = list() # this list contains all the addresses to subscribe
+		self._publishing_addresses = {} # this dict contains the item configuration for all addresses to publish
+		self._published_values = {} # this dict contains the last value published to a certain address
+		for item in self._config:
+			if item.knx_publish():
+				self._publishing_addresses[item.address()] = item
+				self._published_values[item.address()] = None
+				for address in item.knx_addresses():
+					self._publishing_addresses[address] = item
+					self._published_values[address] = None
+			if item.knx_subscribe():
+				self._subscription_addresses.append(item.address())
+				for address in item.knx_addresses():
+					self._subscription_addresses.append(address)
 
 	def connect(self):
-		self._xknx = XKNX()
+		self._xknx = XKNX(
+			config='xknx.yaml', daemon_mode=True
+		)
 
 
-	def set_telegram_cb(self, cb):
-		self._xknx.telegram_queue.register_telegram_received_cb(cb, self._address_filters)
+	def set_telegram_cb(self, telegram_received_cb):
+		self._xknx.telegram_queue.register_telegram_received_cb(
+			telegram_received_cb, self._subscription_addresses
+		)
 
 
 	def get_subscriptions(self):
@@ -64,5 +71,6 @@ class Knx:
 
 
 	async def run(self):
-		await self._xknx.start(daemon_mode=True)
+		await self._xknx.start()
 		await self._xknx.stop()
+

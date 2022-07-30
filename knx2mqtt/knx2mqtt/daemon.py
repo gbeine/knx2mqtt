@@ -27,10 +27,9 @@ class Daemon:
 		self._mqtt.connect()
 
 	def _init_knx(self):
-		self._knx = knx.Knx(self._config.knx())
+		self._knx = knx.KNX(self._config.knx())
 		self._knx.connect()
 
 	def _init_callbacks(self):
-		s = states.states()
-		knx2mqtt.knx2mqtt(self._knx, self._mqtt, s)
 		mqtt2knx.mqtt2knx(self._knx, self._mqtt, s)
+		knx2mqtt.knx2mqtt(self._knx, self._mqtt)

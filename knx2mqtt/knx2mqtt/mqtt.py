@@ -2,7 +2,7 @@ import traceback
 import logging
 import paho.mqtt.client as mqtt
 
-class Mqtt:
+class MQTT:
 
 	def __init__(self, config):
 		self._config = config

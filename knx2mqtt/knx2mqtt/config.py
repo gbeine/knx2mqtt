@@ -2,18 +2,20 @@ import yaml
 import logging
 import logging.config
 
+from yaml.loader import SafeLoader
+
+
 class Config:
 	"""Class for parsing knx2mqtt.yaml."""
 	
 	def __init__(self):
 		"""Initialize Config class."""
-#		logging.config.dictConfig(yaml.load('logging.conf'))
 		with open('logging.conf') as f:
-			D = yaml.load(f)
+			D = yaml.safe_load(f)
 			D.setdefault('version', 1)
 			logging.config.dictConfig(D)
 		self._mqtt = {}
-		self._knx = {}
+		self._knx = []
 	
 	
 	def read(self, file='knx2mqtt.yaml'):
@@ -21,47 +23,87 @@ class Config:
 		logging.debug("Reading %s", file)
 		try:
 			with open(file, 'r') as filehandle:
-				config = yaml.load(filehandle)
-				self._parse_mqtt(config)
-				self._parse_knx(config)
+				config = yaml.safe_load(filehandle)
+				self._parse_mqtt_section(config)
+				self._parse_knx_section(config)
 		except FileNotFoundError as ex:
 			logging.error("Error while reading %s: %s", file, ex)
 
 
-	def _parse_mqtt(self, config):
+	def _parse_mqtt_section(self, config):
 		"""Parse the mqtt section of knx2mqtt.yaml."""
-		if "mqtt" in config:
-			self._mqtt = config["mqtt"]
-		if not "host" in self._mqtt:
-			raise ValueError("MQTT host not set")
-		if not "port" in self._mqtt:
-			raise ValueError("MQTT port not set")
-		if not "user" in self._mqtt:
-			raise ValueError("MQTT user not set")
-		if not "password" in self._mqtt:
-			raise ValueError("MQTT password not set")
-		if not "topic" in self._mqtt:
-			raise ValueError("MQTT topic not set")
-		if not "qos" in self._mqtt:
-			self._mqtt["qos"] = 0
-		if not "retain" in self._mqtt:
-			self._mqtt["retain"] = False
+		if 'mqtt' in config:
+			self._mqtt = config['mqtt']
+		if not 'host' in self._mqtt:
+			raise ValueError('MQTT host not set')
+		if not 'port' in self._mqtt:
+			raise ValueError('MQTT port not set')
+		if not 'user' in self._mqtt:
+			raise ValueError('MQTT user not set')
+		if not 'password' in self._mqtt:
+			raise ValueError('MQTT password not set')
+		if not 'topic' in self._mqtt:
+			raise ValueError('MQTT topic not set')
+		if not 'qos' in self._mqtt:
+			self._mqtt['qos'] = 0
+		if not 'retain' in self._mqtt:
+			self._mqtt['retain'] = False
 
 
-	def _parse_knx(self, config):
+	def _parse_knx_section(self, config):
 		"""Parse the knx section of knx2mqtt.yaml."""
-		if "knx" in config:
-			self._knx = config["knx"]
-		for item in self._knx["sensors"]:
-			if not "address" in item:
-				raise ValueError("Missing address for KNX sensor")
-		for item in self._knx["switches"]:
-			if not "address" in item:
-				raise ValueError("Missing address for KNX switch")
-
+		if 'knx' in config:
+			for item in config['knx']:
+				try:
+					i = Item(item)
+					self._knx.append(i)
+				except ValueError as ex:
+					logging.error("Error while parsing item: %s", ex)
 
 	def mqtt(self):
 		return self._mqtt
 
 	def knx(self):
 		return self._knx
+
+
+class Item:
+	"""Class for a single item in the knx2mqtt.yaml"""
+
+	def __init__(self, item):
+		self._address        = item['address']        if 'address' in item else None
+		self._type           = item['type']           if 'type' in item else None
+		self._mqtt_subscribe = item['mqtt_subscribe'] if 'mqtt_subscribe' in item else False
+		self._mqtt_publish   = item['mqtt_publish']   if 'mqtt_publish' in item else True
+		self._knx_subscribe  = item['knx_subscribe']  if 'knx_subscribe' in item else True
+		self._knx_publish    = item['knx_publish']    if 'knx_publish' in item else False
+		self._mqtt_topics    = item['mqtt_topics']    if 'mqtt_topics' in item else []
+		self._knx_addresses  = item['knx_addresses']  if 'knx_addresses' in item else []
+		if self._address is None:
+			raise ValueError("No address defined for item: %s", item)
+		if self._type is None:
+			raise ValueError("No type defined for item: %s", item)
+
+	def address(self):
+		return self._address
+
+	def type(self):
+		return self._type
+
+	def mqtt_subscribe(self):
+		return self._mqtt_subscribe
+
+	def mqtt_publish(self):
+		return self._mqtt_publish
+
+	def knx_subscribe(self):
+		return self._knx_subscribe
+
+	def knx_publish(self):
+		return self._knx_publish
+
+	def mqtt_topics(self):
+		return self._mqtt_topics
+
+	def knx_addresses(self):
+		return self._knx_addresses
