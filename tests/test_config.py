@@ -1,5 +1,5 @@
 import unittest
-from knx2mqtt import config
+from knx2mqtt.config import Config, Item
 
 
 class TestConfig(unittest.TestCase):
@@ -9,7 +9,7 @@ class TestConfig(unittest.TestCase):
             'address': '1/0/0',
             'type': 'DPTTemperature'
         }
-        item = config.Item(item_config)
+        item = Item(item_config)
         self.assertEqual(item.address(), '1/0/0')
         self.assertEqual(item.type(), 'DPTTemperature')
         self.assertFalse(item.mqtt_subscribe())
@@ -23,7 +23,7 @@ class TestConfig(unittest.TestCase):
             'type': 'DPTTemperature',
             'mqtt_subscribe': True
         }
-        item = config.Item(item_config)
+        item = Item(item_config)
         self.assertTrue(item.mqtt_subscribe())
         self.assertTrue(item.mqtt_publish())
         self.assertTrue(item.knx_subscribe())
@@ -35,7 +35,7 @@ class TestConfig(unittest.TestCase):
             'type': 'DPTTemperature',
             'mqtt_publish': False
         }
-        item = config.Item(item_config)
+        item = Item(item_config)
         self.assertFalse(item.mqtt_subscribe())
         self.assertFalse(item.mqtt_publish())
         self.assertTrue(item.knx_subscribe())
@@ -47,7 +47,7 @@ class TestConfig(unittest.TestCase):
             'type': 'DPTTemperature',
             'knx_subscribe': False
         }
-        item = config.Item(item_config)
+        item = Item(item_config)
         self.assertFalse(item.mqtt_subscribe())
         self.assertTrue(item.mqtt_publish())
         self.assertFalse(item.knx_subscribe())
@@ -59,7 +59,7 @@ class TestConfig(unittest.TestCase):
             'type': 'DPTTemperature',
             'knx_publish': True
         }
-        item = config.Item(item_config)
+        item = Item(item_config)
         self.assertFalse(item.mqtt_subscribe())
         self.assertTrue(item.mqtt_publish())
         self.assertTrue(item.knx_subscribe())
@@ -70,19 +70,19 @@ class TestConfig(unittest.TestCase):
             'type': 'DPTTemperature'
         }
         with self.assertRaises(ValueError):
-            item = config.Item(item_config)
+            item = Item(item_config)
 
     def test_require_type(self):
         item_config = {
             'address': '1/0/0'
         }
         with self.assertRaises(ValueError):
-            item = config.Item(item_config)
+            item = Item(item_config)
 
     def test_full_config(self):
-        c = config.Config()
+        c = Config()
         c.read('test_config.yaml')
-        self.assertEqual(len(c.knx()), 8)
+        self.assertEqual(len(c.items()), 8)
 
 
 if __name__ == '__main__':

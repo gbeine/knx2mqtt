@@ -15,7 +15,7 @@ class Config:
 			D.setdefault('version', 1)
 			logging.config.dictConfig(D)
 		self._mqtt = {}
-		self._knx = []
+		self._items = []
 	
 	
 	def read(self, file='knx2mqtt.yaml'):
@@ -25,7 +25,7 @@ class Config:
 			with open(file, 'r') as filehandle:
 				config = yaml.safe_load(filehandle)
 				self._parse_mqtt_section(config)
-				self._parse_knx_section(config)
+				self._parse_items_section(config)
 		except FileNotFoundError as ex:
 			logging.error("Error while reading %s: %s", file, ex)
 
@@ -50,21 +50,21 @@ class Config:
 			self._mqtt['retain'] = False
 
 
-	def _parse_knx_section(self, config):
-		"""Parse the knx section of knx2mqtt.yaml."""
-		if 'knx' in config:
-			for item in config['knx']:
+	def _parse_items_section(self, config):
+		"""Parse the items section of knx2mqtt.yaml."""
+		if 'items' in config:
+			for item in config['items']:
 				try:
 					i = Item(item)
-					self._knx.append(i)
+					self._items.append(i)
 				except ValueError as ex:
 					logging.error("Error while parsing item: %s", ex)
 
 	def mqtt(self):
 		return self._mqtt
 
-	def knx(self):
-		return self._knx
+	def items(self):
+		return self._items
 
 
 class Item:
