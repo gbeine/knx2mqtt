@@ -136,7 +136,7 @@ class KNX:
 		self._publishing_addresses.append(item.address())
 		self._published_values[item.address()] = None
 		for address in item.knx_addresses():
-			self._publishing_addresses.append(item.address())
+			self._publishing_addresses.append(address)
 			self._published_values[address] = None
 
 
