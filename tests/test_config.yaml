@@ -1,11 +1,16 @@
 mqtt:
-    host: your.mqtt-server.name
-    port: 1883
-    user: knx2mqtt
-    password: topsecret
-    topic: "home/bus/knx"
-    qos: 0
-    retain: true
+  host: your.mqtt-server.name
+  port: 1883
+  user: knx2mqtt
+  password: topsecret
+  topic: "home/bus/knx"
+  qos: 0
+  retain: true
+knx:
+  individual_address: 15.15.249
+  tunneling:
+    host: 192.168.0.11
+    local_ip: 192.168.0.12
 items:
 # This is a date sensor which gets its value from an MQTT topic and publish it to a KNX address
 - address: 0/0/1

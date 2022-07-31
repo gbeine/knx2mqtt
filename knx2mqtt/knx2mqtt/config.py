@@ -15,6 +15,7 @@ class Config:
 			D.setdefault('version', 1)
 			logging.config.dictConfig(D)
 		self._mqtt = {}
+		self._knx = {}
 		self._items = []
 	
 	
@@ -25,6 +26,7 @@ class Config:
 			with open(file, 'r') as filehandle:
 				config = yaml.safe_load(filehandle)
 				self._parse_mqtt_section(config)
+				self._parse_knx_section(config)
 				self._parse_items_section(config)
 		except FileNotFoundError as ex:
 			logging.error("Error while reading %s: %s", file, ex)
@@ -50,6 +52,22 @@ class Config:
 			self._mqtt['retain'] = False
 
 
+	def _parse_knx_section(self, config):
+		"""Parse the knx section of knx2mqtt.yaml."""
+		if 'knx' in config:
+			self._knx = config['knx']
+		if not 'individual_address' in self._knx:
+			raise ValueError('KNX device address not set')
+		if not 'tunneling' in self._knx:
+			raise ValueError('Only tunneling is supported at the moment')
+		if not 'local_ip' in self._knx['tunneling']:
+			raise ValueError('KNX tunneling requires local IP address')
+		if not 'host' in self._knx['tunneling']:
+			raise ValueError('KNX tunneling requires gateway IP address')
+		if not 'port' in self._knx['tunneling']:
+			self._knx['tunneling']['port'] = 3671
+
+
 	def _parse_items_section(self, config):
 		"""Parse the items section of knx2mqtt.yaml."""
 		if 'items' in config:
@@ -60,8 +78,14 @@ class Config:
 				except ValueError as ex:
 					logging.error("Error while parsing item: %s", ex)
 
+
 	def mqtt(self):
 		return self._mqtt
+
+
+	def knx(self):
+		return self._knx
+
 
 	def items(self):
 		return self._items

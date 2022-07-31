@@ -4,11 +4,15 @@ import importlib
 
 from xknx import XKNX
 from xknx.dpt.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram, TelegramDirection
+from xknx.io.knxip_interface import ConnectionType, ConnectionConfig
+from xknx.telegram.address import GroupAddress, IndividualAddress
+from xknx.telegram.telegram import Telegram, TelegramDirection
+
 
 class KNX:
 
-	def __init__(self, items):
+	def __init__(self, config, items):
+		self._config = config
 		self._subscription_addresses = [] # this list contains all the addresses to subscribe
 		self._publishing_addresses = [] # this list contains all the addresses to publish
 		self._published_values = {} # this dict contains the last value published to a certain address
@@ -73,7 +77,7 @@ class KNX:
 		logging.debug("Try to publish value {0} for group address {1}".format(value, group_address))
 
 		if group_address not in self._publishing_addresses:
-			logging.debug("Publish to address {0} is not allowed".format(group_address))
+			logging.info("Publish to address {0} is not allowed".format(group_address))
 			return False
 
 		if group_address in self._published_values and self._published_values[group_address] == value:
@@ -99,7 +103,9 @@ class KNX:
 
 	def connect(self):
 		self._xknx = XKNX(
-			config='xknx.yaml', daemon_mode=True
+			daemon_mode=True,
+			own_address=self._get_individual_address(),
+			connection_config=self._get_connection_config()
 		)
 
 
@@ -129,6 +135,20 @@ class KNX:
 		logging.debug("KNX2MQTT Telegram {0}".format(telegram))
 
 		self._xknx.telegrams.put(telegram)
+
+
+	def _get_connection_config(self):
+		# TODO: currently only tunneling is supported, add more! ;-)
+		return ConnectionConfig(
+			connection_type=ConnectionType.TUNNELING,
+			local_ip=self._config['tunneling']['local_ip'],
+			gateway_ip=self._config['tunneling']['host'],
+			gateway_port=self._config['tunneling']['port']
+		)
+
+
+	def _get_individual_address(self):
+		return IndividualAddress(self._config['individual_address'])
 
 
 	def _add_item_to_publish(self, item):

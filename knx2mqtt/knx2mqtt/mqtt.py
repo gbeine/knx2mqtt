@@ -41,12 +41,25 @@ class MQTT:
 
 
 	def publish(self, topic, payload):
-		topic = "{0}/{1}".format(self._config['topic'], topic)
-		logging.info("Publish %s: %s, %s, %s", topic, payload, self._config["qos"], self._config["retain"])
-		try:
-			self._client.publish(topic, payload, self._config["qos"], self._config["retain"])
-		except Exception as e:
-			logging.error(traceback.format_exc())
+		logging.debug("Try to publish payload {0} for topic {1}".format(payload, topic))
+
+		if topic not in self._publishing_topics:
+			logging.info("Publish to topic {0} is not allowed".format(topic))
+			return
+
+		if topic in self._published_values and self._published_values[topic] == payload:
+			logging.debug("Current value for topic {0} did not change, will not publish".format(topic))
+			# maybe allowing to force publishing should be an option?
+			return False
+
+		topics = [ "{0}/{1}".format(self._config['topic'], topic) ]
+		topics.extend(self._configured_items[topic].mqtt_topics())
+
+		for current_topic in topics:
+			self._publish_value(current_topic, payload)
+			self._published_values[current_topic] = payload
+
+		return True
 
 
 	def run(self):
@@ -71,6 +84,14 @@ class MQTT:
 		topic = "{0}/{1}".format(self._config['topic'], topic)
 		logging.info("Subscribing to topic: {0}".format(topic))
 		self._client.subscribe(topic)
+
+
+	def _publish_value(self, topic, payload):
+		logging.debug("Publish %s: %s, %s, %s", topic, payload, self._config["qos"], self._config["retain"])
+		try:
+			self._client.publish(topic, payload, self._config["qos"], self._config["retain"])
+		except Exception as e:
+			logging.error(traceback.format_exc())
 
 
 	def _add_item_to_publish(self, item):
