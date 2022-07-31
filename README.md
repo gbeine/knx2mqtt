@@ -6,7 +6,7 @@ It is quite simple and does what it's name says: It works as a bridge between KN
 
 ## Installation
 
-The installation required Python 3.7 (it should work with Python 3.5 and 3.6 as well) and `git`.
+The installation requires at least Python 3.7 and `git`.
 
 I usually install my own services under `/opt/services`.
 So, it works out of the box, if you just do:
@@ -24,13 +24,9 @@ All required libraries are installed automatically.
 
 ## Configuration
 
-There are two configuration files: `xnkx.yaml` and `knx2mqtt.yaml`.
-
-The first one is for the [xknx](https://xknx.io/) library.
-An example is included, but this is somehow deprecated and will be changed in the future.
-XKNX provides a way to convert your configuration with [XKNX config converter](https://xknx.io/config-converter/) into the Home Assistant style.
-
-The `knx2mqtt.yaml` is where the magic happens.
+The configuration is located in `knx2mqtt.yaml`.
+Place it under `/etc/knx2mqtt/knx2mqtt.yaml` or in the directory where you run knx2mqtt.
+Do the same with the `logging.conf` file.
 
 ### MQTT
 
@@ -53,7 +49,20 @@ Leave `qos` and `retain` unless you know what these parameters do.
 
 ### KNX
 
-The KNX configuration currently goes with `xknx.yaml`.
+Currently, only a subset of the xknx configuration options is supported.
+It may become more in the future, if I found testing environments with according setups.
+The configuration is now in the Home Assistant style, so if you have an older `xknx.yaml`,  convert your configuration with [XKNX config converter](https://xknx.io/config-converter/).
+
+```
+knx:
+  individual_address: 15.15.249
+  tunneling:
+    host: 192.168.0.11
+    local_ip: 192.168.0.12
+```
+
+Currently, only tunneling is supported as configuration option.
+Feel free to add routing or other options and open a pull request for this.
 
 ### Items
 
@@ -88,6 +97,9 @@ The value will be published only to addresses with valued that differ from the c
 This works, no matter if the source of the event is MQTT or KNX.
 
 **Attention:** You can still configure loops using the same MQTT topic or KNX address for different things!
+
+It is possible to add addtional MQTT topics and KNX addresses.
+Examples are located in the configuration file in the project.
 
 ### Publishing
 

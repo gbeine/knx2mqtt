@@ -53,7 +53,8 @@ class MQTT:
 			return False
 
 		topics = [ "{0}/{1}".format(self._config['topic'], topic) ]
-		topics.extend(self._configured_items[topic].mqtt_topics())
+		if topic in self._configured_items:
+			topics.extend(self._configured_items[topic].mqtt_topics())
 
 		for current_topic in topics:
 			self._publish_value(current_topic, payload)
