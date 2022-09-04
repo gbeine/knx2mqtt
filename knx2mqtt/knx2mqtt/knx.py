@@ -46,8 +46,11 @@ class KNX:
 		logging.debug("Address {0} has DPT type {1}".format(group_address, dpt_type))
 
 		try:
-			dpt_class = getattr(importlib.import_module("xknx.dpt"), dpt_type)
-			value = dpt_class.from_knx(payload.value.value)
+			if dpt_type == 'DPTBinary':
+				value = bool(payload.value.value)
+			else:
+				dpt_class = getattr(importlib.import_module("xknx.dpt"), dpt_type)
+				value = dpt_class.from_knx(payload.value.value)
 			return value
 		except Exception as e:
 			logging.error("DPT type not found for address {0}".format(group_address))
@@ -57,6 +60,7 @@ class KNX:
 
 	def get_payload_to_knx(self, group_address, value):
 		dpt_type = self._get_dpt_type(group_address)
+
 		if dpt_type is None:
 			logging.info("No DPT type found for address {0}".format(group_address))
 			return None
@@ -64,8 +68,11 @@ class KNX:
 		logging.debug("DPT type for address {0} is {1}".format(group_address, dpt_type))
 
 		try:
-			dpt_class = getattr(importlib.import_module('xknx.dpt'), dpt_type)
-			payload = DPTArray(dpt_class.to_knx(value))  # TODO: use binary as option
+			if dpt_type == 'DPTBinary':
+				payload = DPTBinary(int(value))
+			else:
+				dpt_class = getattr(importlib.import_module('xknx.dpt'), dpt_type)
+				payload = DPTArray(dpt_class.to_knx(value))
 			return payload
 		except Exception as e:
 			logging.error("DPT type not found for address {0}".format(group_address))
