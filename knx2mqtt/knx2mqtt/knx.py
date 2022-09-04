@@ -67,9 +67,12 @@ class KNX:
 
 		logging.debug("DPT type for address {0} is {1}".format(group_address, dpt_type))
 
+
 		try:
-			if dpt_type == 'DPTBinary':
-				payload = DPTBinary(int(value))
+			if dpt_type == 'DPTBinary' and type(value) == str:
+				payload = DPTBinary(int(value.lower() == 'true'))
+			elif dpt_type == 'DPTBinary' and type(value) == bool:
+				payload = DPTBinary(int(value == True))
 			else:
 				dpt_class = getattr(importlib.import_module('xknx.dpt'), dpt_type)
 				payload = DPTArray(dpt_class.to_knx(value))
