@@ -50,6 +50,8 @@ class Config:
 			self._mqtt['qos'] = 0
 		if not 'retain' in self._mqtt:
 			self._mqtt['retain'] = False
+		if not 'json' in self._mqtt:
+			self._mqtt['json'] = False
 
 
 	def _parse_knx_section(self, config):

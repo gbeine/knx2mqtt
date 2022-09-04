@@ -89,7 +89,7 @@ class KNX:
 		addresses.extend(self._configured_items[group_address].knx_addresses())
 		logging.debug("Publishing to address {0} will done for {1} addresses".format(group_address, len(addresses)))
 
-		payload = get_payload_to_knx(group_address, value)
+		payload = self.get_payload_to_knx(group_address, value)
 
 		if payload is None:
 			return False
