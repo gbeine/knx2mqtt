@@ -101,7 +101,13 @@ class MQTT:
 	def _publish_value(self, topic, payload):
 		"""Publish a payload to a certain MQTT topic"""
 		logging.debug("Publish %s: %s, %s, %s", topic, payload, self._config['qos'], self._config['retain'])
-		message = "{ timestamp: %s, value: %s }".format(int(time.time()), payload) if self._config['json'] else payload
+		if self._config['json']:
+			message = json.dumps({
+				'timestamp': int(time.time()),
+				'value': payload
+			})
+		else:
+			message = payload
 		try:
 			self._client.publish(topic, message, self._config['qos'], self._config['retain'])
 		except Exception as e:
