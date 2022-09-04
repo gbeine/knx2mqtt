@@ -6,6 +6,7 @@ from xknx import XKNX
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.io.knxip_interface import ConnectionType, ConnectionConfig
 from xknx.telegram.address import GroupAddress, IndividualAddress
+from xknx.telegram.apci import GroupValueWrite
 from xknx.telegram.telegram import Telegram, TelegramDirection
 
 
@@ -136,14 +137,23 @@ class KNX:
 
 		group_address = GroupAddress(address)
 
+		group_value = GroupValueWrite(value)
+
 		telegram = Telegram(
-			destination_address=group_address, payload=value,
+			destination_address=group_address, payload=group_value,
 			source_address = self._get_individual_address()
 		)
 
 		logging.debug("KNX2MQTT Telegram {0}".format(telegram))
 
-		self._xknx.telegrams.put(telegram)
+		if self._xknx.started and self._xknx.connected:
+			# asyncio.run(self._xknx.telegram_queue.process_telegram_outgoing(telegram))
+			asyncio.run(self._xknx.telegrams.put(telegram))
+			# self._xknx.telegrams.put_nowait(telegram)
+			# self._xknx.telegrams.put(telegram)
+			logging.debug("KNX2MQTT Telegram sent")
+		else:
+			logging.error("XKNX not started")
 
 
 	def _get_connection_config(self):
