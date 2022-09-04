@@ -18,6 +18,11 @@ class Options:
 
 
     def config(self):
+        if not hasattr(self, '_config'):
+            if os.path.exists('/etc/knx2mqtt.yaml'):
+                self._config = '/etc/knx2mqtt.yaml'
+            else:
+                self._config = 'knx2mqtt.yaml'
         return self._config
 
 
@@ -30,7 +35,3 @@ class Options:
             if o == '-c':
                 if os.path.exists(a):
                     self._config = a
-                elif os.path.exists('/etc/knx2mqtt.conf'):
-                    self._config = '/etc/knx2mqtt.conf'
-                else:
-                    self._config = 'knx2mqtt.conf'
