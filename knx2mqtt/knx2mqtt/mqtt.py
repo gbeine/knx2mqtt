@@ -37,10 +37,7 @@ class MQTT:
 
 	def set_message_cb(self, cb):
 		"""Set the callback method to be used when a MQTT message arrives"""
-		if self._config['json']:
-			self._client.on_message = self._on_json_message(cb)
-		else:
-			self._client.on_message = cb
+		self._client.on_message = self._on_message(cb)
 
 
 	def get_plain_topic(self, topic):
@@ -91,6 +88,29 @@ class MQTT:
 		return True
 
 
+	def _on_message(self, cb):
+		def on_message(client, userdata, message):
+			try:
+				logging.debug("MQTT connection callback")
+				topic = message.topic
+				payload = str(message.payload.decode())  # ensure that payload is string
+
+				logging.debug("Message {0} from topic {1}".format(payload, topic))
+
+				if self._config['json']:
+					value = self._parse_value_from_json(payload)
+				else:
+					value = payload
+
+				address = self.get_plain_topic(topic)
+
+				cb(address, value)
+			except Exception as e:
+				logging.error(traceback.format_exc())
+
+			return True
+		return on_message
+
 	def _subscribe(self, topic):
 		"""Subscribe to a certain MQTT topic"""
 		topic = "{0}/{1}".format(self._config['topic'], topic)
@@ -114,17 +134,12 @@ class MQTT:
 			logging.error(traceback.format_exc())
 
 
-	def _on_json_message(self, cb):
+	def _parse_value_from_json(self, payload):
 		"""Wraps around the callback method in case the payload is expected as JSON."""
-		def parse_value_from_json(message):
-			json = json.loads(message)
-			if not 'value' in json:
-				raise ValueError('No value attribute in message payload')
-			return json['value']
-		def on_message(self, client, userdata, message):
-			value = parse_value_from_json(message)
-			cb(self, client, userdata, value)
-		return on_message
+		msg = json.loads(payload)
+		if not 'value' in msg:
+			raise ValueError('No value attribute in message payload')
+		return msg['value']
 
 
 	def _add_item_to_publish(self, item):
