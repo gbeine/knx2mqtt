@@ -137,10 +137,9 @@ class KNX:
 		group_address = GroupAddress(address)
 
 		telegram = Telegram(
-			destination_address=group_address, payload=value
+			destination_address=group_address, payload=value,
+			source_address = self._get_individual_address()
 		)
-		telegram.destination_address = group_address
-		telegram.payload = value
 
 		logging.debug("KNX2MQTT Telegram {0}".format(telegram))
 
