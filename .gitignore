@@ -1,5 +1,7 @@
 __pycache__
 bin
+build
+dist
 lib
 pip-selfcheck.json
 pyvenv.cfg
