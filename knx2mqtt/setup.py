@@ -9,10 +9,9 @@ setup(name='knx2mqtt',
       license='MIT',
       packages=['knx2mqtt'],
       python_requires="<3.8.0",
-      requires=[
-          'logging',
-          'paho.mqtt',
-          'pyyaml',
-          'xknx>=0.17, <0.18',
+      install_requires=[
+          "paho.mqtt",
+          "pyyaml",
+          "xknx>=0.17, <0.18",
         ],
       zip_safe=False)
