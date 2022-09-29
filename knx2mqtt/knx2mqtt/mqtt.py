@@ -12,17 +12,12 @@ class MQTT:
 		self._subscription_topics = [] # this list contains all the topics to subscribe
 		self._publishing_topics = [] # this list contains all the topics to publish
 		self._published_values = {} # this dict contains the last value published to a certain address
-		self._configured_items = {}
+		self._configured_items = {} # configured items
 		for item in items:
-			item_added = False
 			if item.mqtt_publish():
 				self._add_item_to_publish(item)
-				item_added = True
 			if item.mqtt_subscribe():
 				self._add_item_to_subscribe(item)
-				item_added = True
-			if item_added:
-				self._configured_items[item.address()] = item
 
 
 	def connect(self):
@@ -144,6 +139,7 @@ class MQTT:
 	def _add_item_to_publish(self, item):
 		self._publishing_topics.append(item.address())
 		self._published_values[item.address()] = None
+		self._configured_items[item.address()] = item
 		for topic in item.mqtt_topics():
 			self._publishing_topics.append(topic)
 			self._published_values[topic] = None
@@ -153,5 +149,6 @@ class MQTT:
 		address = item.address()
 		topic = "{0}/{1}".format(self._config['topic'], address)
 		self._subscription_topics.append(topic)
+		self._configured_items[address] = item
 		for topic in item.mqtt_topics():
 			self._subscription_topics.append(topic)
