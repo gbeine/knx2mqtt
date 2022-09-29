@@ -113,7 +113,6 @@ class MQTT:
 
 	def _subscribe(self, topic):
 		"""Subscribe to a certain MQTT topic"""
-		topic = "{0}/{1}".format(self._config['topic'], topic)
 		logging.info("Subscribing to topic: {0}".format(topic))
 		self._client.subscribe(topic)
 
@@ -151,6 +150,8 @@ class MQTT:
 
 
 	def _add_item_to_subscribe(self, item):
-		self._subscription_topics.append(item.address())
+		address = item.address()
+		topic = "{0}/{1}".format(self._config['topic'], address)
+		self._subscription_topics.append(topic)
 		for topic in item.mqtt_topics():
 			self._subscription_topics.append(topic)
