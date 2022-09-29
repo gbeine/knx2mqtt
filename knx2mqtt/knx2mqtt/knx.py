@@ -79,23 +79,23 @@ class KNX:
 			return None
 
 
-	def publish(self, group_address, value):
-		logging.debug("Try to publish value {0} for group address {1}".format(value, group_address))
+	def publish(self, item_address, value):
+		logging.debug("Try to publish value {0} for group address {1}".format(value, item_address))
 
-		if group_address not in self._publishing_addresses:
-			logging.info("Publish to address {0} is not allowed".format(group_address))
+		if item_address not in self._publishing_addresses:
+			logging.info("Publish to address {0} is not allowed".format(item_address))
 			return False
 
-		if group_address in self._published_values and self._published_values[group_address] == value:
-			logging.debug("Current value for address {0} did not change, will not publish".format(group_address))
+		if item_address in self._published_values and self._published_values[item_address] == value:
+			logging.debug("Current value for address {0} did not change, will not publish".format(item_address))
 			# maybe allowing to force publishing should be an option?
 			return False
 
-		addresses = [ self._configured_items[group_address].address() ]
-		addresses.extend(self._configured_items[group_address].knx_addresses())
-		logging.debug("Publishing to address {0} will done for {1} addresses".format(group_address, len(addresses)))
+		addresses = [ self._configured_items[item_address].address() ]
+		addresses.extend(self._configured_items[item_address].knx_addresses())
+		logging.debug("Publishing to address {0} will done for {1} addresses".format(item_address, len(addresses)))
 
-		payload = self.get_payload_to_knx(group_address, value)
+		payload = self.get_payload_to_knx(item_address, value)
 
 		if payload is None:
 			return False
