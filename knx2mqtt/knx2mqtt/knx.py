@@ -19,15 +19,10 @@ class KNX:
 		self._published_values = {} # this dict contains the last value published to a certain address
 		self._configured_items = {}
 		for item in items:
-			item_added = False
 			if item.knx_publish():
 				self._add_item_to_publish(item)
-				item_added = True
 			if item.knx_subscribe():
 				self._add_item_to_subscribe(item)
-				item_added = True
-			if item_added:
-				self._configured_items[item.address()] = item
 
 
 	def set_telegram_cb(self, telegram_received_cb):
@@ -173,14 +168,18 @@ class KNX:
 
 
 	def _add_item_to_publish(self, item):
-		self._publishing_addresses.append(item.address())
-		self._published_values[item.address()] = None
+		address = item.address()
+		self._publishing_addresses.append(address)
+		self._published_values[address] = None
+		self._configured_items[address] = item
 		for address in item.knx_addresses():
 			self._publishing_addresses.append(address)
 			self._published_values[address] = None
 
 
 	def _add_item_to_subscribe(self, item):
-		self._subscription_addresses.append(GroupAddress(item.address()))
+		address = item.address()
+		self._subscription_addresses.append(GroupAddress(address))
+		self._configured_items[address] = item
 		for address in item.knx_addresses():
 			self._subscription_addresses.append(GroupAddress(address))
