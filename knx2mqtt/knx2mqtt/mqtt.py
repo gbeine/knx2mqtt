@@ -13,6 +13,7 @@ class MQTT:
 		self._publishing_topics = [] # this list contains all the topics to publish
 		self._published_values = {} # this dict contains the last value published to a certain address
 		self._configured_items = {} # configured items
+		self._topic_address_map = {} # map mqtt subscription topics to item addresses
 		for item in items:
 			if item.mqtt_publish():
 				self._add_item_to_publish(item)
@@ -97,9 +98,10 @@ class MQTT:
 				else:
 					value = payload
 
-				address = self.get_plain_topic(topic)
-
+				# publish value to the default KNX address of the topic's item
+				address = self._topic_address_map[topic]
 				cb(address, value)
+
 			except Exception as e:
 				logging.error(traceback.format_exc())
 
@@ -149,6 +151,8 @@ class MQTT:
 		address = item.address()
 		topic = "{0}/{1}".format(self._config['topic'], address)
 		self._subscription_topics.append(topic)
+		self._topic_address_map[topic] = address
 		self._configured_items[address] = item
 		for topic in item.mqtt_topics():
 			self._subscription_topics.append(topic)
+			self._topic_address_map[topic] = address
