@@ -147,8 +147,10 @@ class KNX:
 		logging.debug("KNX2MQTT Telegram {0}".format(telegram))
 
 		if self._xknx.started and self._xknx.connected:
-			# asyncio.run(self._xknx.telegram_queue.process_telegram_outgoing(telegram))
-			asyncio.run(self._xknx.telegrams.put(telegram))
+			if 'no_queue' in self._config and self._config['no_queue']:
+				asyncio.run(self._xknx.telegram_queue.process_telegram_outgoing(telegram))
+			else:
+				asyncio.run(self._xknx.telegrams.put(telegram))
 			# self._xknx.telegrams.put_nowait(telegram)
 			# self._xknx.telegrams.put(telegram)
 			logging.debug("KNX2MQTT Telegram sent")
