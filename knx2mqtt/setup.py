@@ -8,10 +8,10 @@ setup(name='knx2mqtt',
       author_email='mail@gerritbeine.de',
       license='MIT',
       packages=['knx2mqtt'],
-      python_requires=">=3.7.0",
+      python_requires=">=3.9.0",
       install_requires=[
           "paho.mqtt",
           "pyyaml",
-          "xknx>=0.17, <0.18",
+          "xknx>=0.22, <1.0",
         ],
       zip_safe=False)
