@@ -8,16 +8,20 @@ from yaml.loader import SafeLoader
 class Config:
 	"""Class for parsing knx2mqtt.yaml."""
 	
-	def __init__(self):
+	def __init__(self, logconfig_file='logging.conf'):
 		"""Initialize Config class."""
-		with open('logging.conf') as f:
-			D = yaml.safe_load(f)
-			D.setdefault('version', 1)
-			logging.config.dictConfig(D)
-		self._mqtt = {}
-		self._knx = {}
-		self._items = []
-	
+		try:
+			with open(logconfig_file) as f:
+				D = yaml.safe_load(f)
+				D.setdefault('version', 1)
+				logging.config.dictConfig(D)
+			self._mqtt = {}
+			self._knx = {}
+			self._items = []
+		except FileNotFoundError as ex:
+			logging.error("Logging configuration file %s not found: %s", logconfig_file, ex)
+			exit(ex.errno)
+
 	
 	def read(self, file='knx2mqtt.yaml'):
 		"""Read config."""
@@ -29,7 +33,8 @@ class Config:
 				self._parse_knx_section(config)
 				self._parse_items_section(config)
 		except FileNotFoundError as ex:
-			logging.error("Error while reading %s: %s", file, ex)
+			logging.error("Configuration file %s not found: %s", file, ex)
+			exit(ex.errno)
 
 
 	def _parse_mqtt_section(self, config):
