@@ -12,6 +12,6 @@ setup(name='knx2mqtt',
       install_requires=[
           "paho.mqtt",
           "pyyaml",
-          "xknx>=0.22, <1.0",
+          "xknx",
         ],
       zip_safe=False)

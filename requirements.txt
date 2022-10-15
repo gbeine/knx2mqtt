@@ -2,4 +2,4 @@
 paho.mqtt
 pyinstaller
 pyyaml
-xknx<1.0
+xknx
