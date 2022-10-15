@@ -51,6 +51,10 @@ class Config:
 				self._mqtt['password'] = None
 			if not 'topic' in self._mqtt:
 				raise ValueError('MQTT topic not set')
+			if not 'client_id' in self._mqtt:
+				self._mqtt['client_id'] = 'knx2mqtt'
+			if not 'keepalive' in self._mqtt:
+				self._mqtt['keepalive'] = 60
 			if not 'qos' in self._mqtt:
 				self._mqtt['qos'] = 0
 			if not 'retain' in self._mqtt:
