@@ -35,24 +35,23 @@ class KNX:
 
 	def get_payload_from_knx(self, group_address, payload):
 		logging.debug("Try to get payload value for address {0}".format(group_address))
-		dpttype_auto = payload.__class__.__name__
 		dpt_type = self._get_dpt_type(group_address)
 
 		if dpt_type is None:
 			logging.info("No DPT type found for address {0}".format(group_address))
-			return None
-
-		if dpt_type != dpttype_auto:
-			logging.info("Wrong DPT type specified for address {0}".format(group_address))
-			return None
-
-		logging.debug("Address {0} has DPT type {1}".format(group_address, dpt_type))
+		else:
+			logging.info("Address {0} has DPT type {1}".format(group_address, dpt_type))
 
 		try:
 			if dpt_type == 'DPTBinary':
 				value = bool(payload.value.value)
+			elif dpt_type is not None:
+				dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
+				value = dpt_class.from_knx(payload.value.value)
 			else:
-				dpt_class = getattr(importlib.import_module("xknx.dpt"), dpt_type)
+				dpttype_auto = payload.value.__class__.__name__
+				logging.info("Using auto detected DPT type for address {0}: {1}".format(group_address, dpttype_auto))
+				dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpttype_auto)
 				value = dpt_class.from_knx(payload.value.value)
 			return value
 		except Exception as e:
