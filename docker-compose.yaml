@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  knx2mqtt:
+    build:
+      context: '.'
+    image: 'knx2mqtt'
+    restart: 'unless-stopped'
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./knx2mqtt.yaml:/config/knx2mqtt.yaml

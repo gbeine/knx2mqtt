@@ -2,7 +2,9 @@
 
 I've created this project as a replacement for the KNX integration of [HomeAssistant](https://home-assistant.io/) that worked not stable in my environment.
 
-It is quite simple and does what it's name says: It works as a bridge between KNX and MQTT tranlating messages between these in both directions.
+It is quite simple and does what it's name says: It works as a bridge between KNX and MQTT translating messages between these in both directions.
+It can also perfectly be used to route KNX messages between several KNX installations, e.g., if you have an indoor and an outdoor setup.
+
 
 ## Installation
 
@@ -21,6 +23,7 @@ cd knx2mqtt
 
 The `install` script creates a virtual python environment using the `venv` module.
 All required libraries are installed automatically.
+
 
 ## Configuration
 
@@ -107,6 +110,36 @@ All values are published using the group address and the MQTT topic.
 
 So, the Date exposing sensor in the example is listening for `home/bus/knx/0/0/1` and the switch is listening on and publishing to `home/bus/knx/0/1/1`.
 
+### Docker environment
+To run the app in a container, you need to have a running Docker installation.
+You can either build the container manually or use the provided `docker-compose` file.  
+
+Using plain docker:
+```
+(...)
+cd knx2mqtt
+docker build -t knx2mqtt .
+```
+
+Using docker-compose, the image build process is covered automatically. 
+If you want to trigger the build manually, run:
+```
+(...)
+cd knx2mqtt
+docker-compose build
+```
+
+The port `12399/udp` is exposed by the container.  
+
+You can also use the following environment variables:  
+`LOGDIR` path to log files.  
+`LOGCONFIG_FILE` path to configuration file for logging options (use `/config/logging.production.conf` for producation and `/config/logging.conf` for debugging).  
+`CONFIG_FILE` path to main knx2mqqt configuration file.  
+`KNX_LOCAL_PORT` default local UDP port used by knx2mqtt for KNX gateway communication.  
+
+The default values are defined in the file `Dockerfile`.
+
+
 ## Running knx2mqtt
 
 I use [Supervisor](http://supervisord.org/) to manage my local services.
@@ -116,6 +149,23 @@ For this, a configuration file and an executable are part of the project.
 The configuration file is located under `supervisor`, just copy or link it to `/etc/supervisor/conf.d`.
 
 The `run` script expects an environment variable named `LOGDIR` where the logfile should be written. This is set by the supervisor configuration, so change it there.
+
+### Run as container
+
+You can either run the container manually or use the provided `docker-compose` file.  
+
+The configuration file `knx2mqtt.yaml` must be mounted into the container at `/config/knx2mqtt.yaml`, otherwise the container won't start.
+
+Using plain docker:
+```
+docker run --rm --name knx2mqtt -v $PWD/knx2mqtt.yaml:/app/knx2mqtt.yaml knx2mqtt
+```
+
+Using docker-compose adjust your settings in `docker-compose.yaml` first. Then run:
+```
+cd knx2mqtt
+docker-compose up -d
+```
 
 ## Support
 
