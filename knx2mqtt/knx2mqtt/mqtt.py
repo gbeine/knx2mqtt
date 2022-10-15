@@ -23,7 +23,8 @@ class MQTT:
 
 	def connect(self):
 		self._client = mqtt.Client()
-		self._client.username_pw_set(self._config['user'], self._config['password'])
+		if self._config['user'] and self._config['password']:
+			self._client.username_pw_set(self._config['user'], self._config['password'])
 		self._client.on_connect = self._on_connect
 
 

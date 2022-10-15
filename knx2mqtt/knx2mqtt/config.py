@@ -41,38 +41,38 @@ class Config:
 		"""Parse the mqtt section of knx2mqtt.yaml."""
 		if 'mqtt' in config:
 			self._mqtt = config['mqtt']
-		if not 'host' in self._mqtt:
-			raise ValueError('MQTT host not set')
-		if not 'port' in self._mqtt:
-			raise ValueError('MQTT port not set')
-		if not 'user' in self._mqtt:
-			raise ValueError('MQTT user not set')
-		if not 'password' in self._mqtt:
-			raise ValueError('MQTT password not set')
-		if not 'topic' in self._mqtt:
-			raise ValueError('MQTT topic not set')
-		if not 'qos' in self._mqtt:
-			self._mqtt['qos'] = 0
-		if not 'retain' in self._mqtt:
-			self._mqtt['retain'] = False
-		if not 'json' in self._mqtt:
-			self._mqtt['json'] = False
+			if not 'host' in self._mqtt:
+				raise ValueError('MQTT host not set')
+			if not 'port' in self._mqtt:
+				self._mqtt['port'] = 1883
+			if not 'user' in self._mqtt:
+				self._mqtt['user'] = None
+			if not 'password' in self._mqtt:
+				self._mqtt['password'] = None
+			if not 'topic' in self._mqtt:
+				raise ValueError('MQTT topic not set')
+			if not 'qos' in self._mqtt:
+				self._mqtt['qos'] = 0
+			if not 'retain' in self._mqtt:
+				self._mqtt['retain'] = False
+			if not 'json' in self._mqtt:
+				self._mqtt['json'] = False
 
 
 	def _parse_knx_section(self, config):
 		"""Parse the knx section of knx2mqtt.yaml."""
 		if 'knx' in config:
 			self._knx = config['knx']
-		if not 'individual_address' in self._knx:
-			raise ValueError('KNX device address not set')
-		if not 'tunneling' in self._knx:
-			raise ValueError('Only tunneling is supported at the moment')
-		if not 'local_ip' in self._knx['tunneling']:
-			raise ValueError('KNX tunneling requires local IP address')
-		if not 'host' in self._knx['tunneling']:
-			raise ValueError('KNX tunneling requires gateway IP address')
-		if not 'port' in self._knx['tunneling']:
-			self._knx['tunneling']['port'] = 3671
+			if not 'individual_address' in self._knx:
+				raise ValueError('KNX device address not set')
+			if not 'tunneling' in self._knx:
+				raise ValueError('Only tunneling is supported at the moment')
+				if not 'local_ip' in self._knx['tunneling']:
+					raise ValueError('KNX tunneling requires local IP address')
+				if not 'host' in self._knx['tunneling']:
+					raise ValueError('KNX tunneling requires gateway IP address')
+				if not 'port' in self._knx['tunneling']:
+					self._knx['tunneling']['port'] = 3671
 
 
 	def _parse_items_section(self, config):
