@@ -6,7 +6,7 @@ It is quite simple and does what it's name says: It works as a bridge between KN
 
 ## Installation
 
-The installation required Python 3.7 (it should work with Python 3.5 and 3.6 as well) and `git`.
+The installation requires at least Python 3.7 and `git`.
 
 I usually install my own services under `/opt/services`.
 So, it works out of the box, if you just do:
@@ -24,12 +24,9 @@ All required libraries are installed automatically.
 
 ## Configuration
 
-There are two configuration files: `xnkx.yaml` and `knx2mqtt.yaml`.
-
-The first one is for the [xknx](https://xknx.io/) library.
-An example is included, more details you will find in the [xknx documentation](https://xknx.io/configuration).
-
-The `knx2mqtt.yaml` is where the magic happens.
+The configuration is located in `knx2mqtt.yaml`.
+Place it under `/etc/knx2mqtt/knx2mqtt.yaml` or in the directory where you run knx2mqtt.
+Do the same with the `logging.conf` file.
 
 ### MQTT
 
@@ -52,44 +49,57 @@ Leave `qos` and `retain` unless you know what these parameters do.
 
 ### KNX
 
-Then you can configure your KNX bus topology.
-At the moment the bridge supports sensors and switches.
+Currently, only a subset of the xknx configuration options is supported.
+It may become more in the future, if I found testing environments with according setups.
+The configuration is now in the Home Assistant style, so if you have an older `xknx.yaml`,  convert your configuration with [XKNX config converter](https://xknx.io/config-converter/).
 
 ```
 knx:
-    sensors:
-    ...
-    switches:
-    ...
+  individual_address: 15.15.249
+  tunneling:
+    host: 192.168.0.11
+    local_ip: 192.168.0.12
 ```
 
-Each item (sensors and switches) need an `address` (the group address) and a `type`.
+Currently, only tunneling is supported as configuration option.
+Feel free to add routing or other options and open a pull request for this.
+
+### Items
+
+Then you can configure your bus topology as items.
+
+```
+items:
+- address: 0/8/15
+  type: DTPTemperature
+- address: 4/7/15
+  type: DTPHumidity
+  ...
+```
+
+Each item need an `address` (the group address) and a `type`.
 Unfortunately, the list of types is not part of the xknx documentation.
 But the examples in the file I provide with the project may fit for the most purposes.
+All supported types can be found in the [xknx sources](https://github.com/XKNX/xknx/blob/main/xknx/dpt/__init__.py).
 
 The default operating mode for an object is to listen on the KNX and publish the telegram values to MQTT.
 
-That may be changed by setting `expose` or `subscribe` to `true`.
+That may be changed using the following settings:
 
-If `expose` is `true`, values published on MQTT will be sent as telegram to KNX. Values from KNX are never published to MQTT.
+* `mqtt_subscribe` (default: false): if set to `true`, changes on any related MQTT topic will be processed
+* `mqtt_publish` (default: true): if set to `true`, the values for this item will be published on all related MQTT topics 
+* `knx_subscribe` (default: true): if set to `true`, changes on any related KNX address will be processed
+* `knx_publish` (default: false): if set to `true`, the values for this item will be published on all related KXN addresses 
 
-```
-knx:
-    sensors:
-        - address: 0/0/1
-          type: DPTDate
-          expose: true
-```
+To prevent communication loops, the bridge caches all states that have been published.
+If an event for an item is received, the bridge checks if the value has changed. 
+The value will be published only to addresses with valued that differ from the current one.
+This works, no matter if the source of the event is MQTT or KNX.
 
-If `subscribe` is `true`, the bridge works in bidirectional mode. Values from KNX are published to MQTT and vice versa.
+**Attention:** You can still configure loops using the same MQTT topic or KNX address for different things!
 
-```
-knx:
-    switches:
-        - address: 0/1/1
-          type: DPTBinary
-          subscribe: true
-```
+It is possible to add addtional MQTT topics and KNX addresses.
+Examples are located in the configuration file in the project.
 
 ### Publishing
 

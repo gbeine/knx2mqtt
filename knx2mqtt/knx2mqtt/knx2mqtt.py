@@ -2,44 +2,35 @@ import traceback
 import logging
 import importlib
 
+from xknx.telegram import TelegramDirection
+
+
 class knx2mqtt:
 
-	def __init__(self, knx, mqtt, states):
+	def __init__(self, knx, mqtt):
+		logging.info("KNX2MQTT - initialise knx2mqtt routing")
 		self._knx = knx
 		self._mqtt = mqtt
-		self._states = states
-		self._knx.set_telegram_cb(self.callback)
+		self._knx.set_telegram_cb(self.on_telegram_received)
 
 
-	async def callback(self, telegram):
+	async def on_telegram_received(self, telegram):
 		try:
-			logging.info("KNX2MQTT {}".format(telegram))
-			group_address = str(telegram.group_address)
-			payload = telegram.payload
+			logging.debug("KNX2MQTT Telegram {}".format(telegram))
+			if telegram.direction != TelegramDirection.INCOMING:
+				return
 
-			dpttype = self._knx.get_dpttype(group_address)
+			group_address = str(telegram.destination_address)
+			payload = self._knx.get_payload_from_knx(group_address, telegram.payload)
 
-			if dpttype is None:
-				logging.info("No DPTType found for address {0}".format(group_address))
-				return True
-			elif dpttype == "DPTBinary":
-				logging.debug("{0} {1}".format(group_address, dpttype))
-				value = payload.value
-			else:
-				logging.debug("{0} {1}".format(group_address, dpttype))
-				dptcls = getattr(importlib.import_module("xknx.knx"), dpttype)
-				value = dptcls.from_knx(payload.value)
+			if payload is None:
+				return
 
-			logging.debug("{0} {1}".format(payload, value))
+			logging.debug("KNX2MQTT Address {0} with payload {1}".format(group_address, payload))
 
-			if not self._states.is_state(group_address, value):
-				self._states.set_state(group_address, value)
-				self._mqtt.publish(group_address, value)
+			self._mqtt.publish(group_address, payload)
 
-			# HACK!
-			self._knx._xknx.started = True
-
-			return True
+			return
 
 		except Exception as e:
 			logging.error(traceback.format_exc())

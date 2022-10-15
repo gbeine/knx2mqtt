@@ -1,0 +1,11 @@
+[Unit]
+Description=knx2mqtt bridge daemon
+Documentation=https://github.com/gbeine/knx2mqtt
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/knx2mqtt
+
+[Install]
+WantedBy=multi-user.target
+Alias=knx2mqtt.service
