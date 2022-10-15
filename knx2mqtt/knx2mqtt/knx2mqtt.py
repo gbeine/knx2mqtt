@@ -16,7 +16,7 @@ class knx2mqtt:
 
 	async def on_telegram_received(self, telegram):
 		try:
-			logging.debug("KNX2MQTT Telegram {}".format(telegram))
+			logging.debug("KNX2MQTT: Telegram {}".format(telegram))
 			if telegram.direction != TelegramDirection.INCOMING:
 				return
 
@@ -26,7 +26,7 @@ class knx2mqtt:
 			if payload is None:
 				return
 
-			logging.debug("KNX2MQTT Address {0} with payload {1}".format(group_address, payload))
+			logging.info("KNX2MQTT: Telegram for address {0} with payload {1}".format(group_address, payload))
 
 			self._mqtt.publish(group_address, payload)
 

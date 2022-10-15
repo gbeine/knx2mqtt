@@ -16,7 +16,7 @@ class mqtt2knx:
 
 	def on_message(self, address, payload):
 		try:
-			logging.debug("Publish value {0} for address {1}".format(payload, address))
+			logging.info("MQTT: Publish value {0} for address {1}".format(payload, address))
 			self._knx.publish(address, payload)
 		except Exception as e:
 			logging.error(traceback.format_exc())

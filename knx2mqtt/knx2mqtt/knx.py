@@ -40,7 +40,7 @@ class KNX:
 		if dpt_type is None:
 			logging.info("No DPT type found for address {0}".format(group_address))
 		else:
-			logging.info("Address {0} has DPT type {1}".format(group_address, dpt_type))
+			logging.debug("Address {0} has DPT type {1}".format(group_address, dpt_type))
 
 		try:
 			if dpt_type == 'DPTBinary':
