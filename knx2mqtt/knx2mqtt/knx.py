@@ -35,10 +35,15 @@ class KNX:
 
 	def get_payload_from_knx(self, group_address, payload):
 		logging.debug("Try to get payload value for address {0}".format(group_address))
+		dpttype_auto = payload.__class__.__name__
 		dpt_type = self._get_dpt_type(group_address)
 
 		if dpt_type is None:
 			logging.info("No DPT type found for address {0}".format(group_address))
+			return None
+
+		if dpt_type != dpttype_auto:
+			logging.info("Wrong DPT type specified for address {0}".format(group_address))
 			return None
 
 		logging.debug("Address {0} has DPT type {1}".format(group_address, dpt_type))
