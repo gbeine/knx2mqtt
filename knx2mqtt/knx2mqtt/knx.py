@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import importlib
+import socket
 
 from xknx import XKNX
 from xknx.dpt.dpt import DPTArray, DPTBinary
@@ -9,6 +10,7 @@ from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import GroupValueWrite
 from xknx.telegram.telegram import Telegram, TelegramDirection
 
+XKNX_DPT_MODULE_STR = "xknx.dpt"
 
 class KNX:
 
@@ -70,7 +72,7 @@ class KNX:
 			elif dpt_type == 'DPTBinary' and type(value) == bool:
 				payload = DPTBinary(int(value == True))
 			else:
-				dpt_class = getattr(importlib.import_module('xknx.dpt'), dpt_type)
+				dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
 				payload = DPTArray(dpt_class.to_knx(value))
 			return payload
 		except Exception as e:
@@ -135,8 +137,10 @@ class KNX:
 		group_value = GroupValueWrite(value)
 
 		telegram = Telegram(
-			destination_address=group_address, payload=group_value,
-			source_address = self._get_individual_address()
+			destination_address=group_address,
+			direction=TelegramDirection.OUTGOING,
+			payload=group_value,
+			source_address=self._get_individual_address()
 		)
 
 		logging.debug("KNX2MQTT Telegram {0}".format(telegram))
@@ -158,7 +162,7 @@ class KNX:
 		return ConnectionConfig(
 			connection_type=ConnectionType.TUNNELING,
 			local_ip=self._config['tunneling']['local_ip'],
-			gateway_ip=self._config['tunneling']['host'],
+			gateway_ip=socket.gethostbyname(self._config['tunneling']['host']),
 			gateway_port=self._config['tunneling']['port']
 		)
 
