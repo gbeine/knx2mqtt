@@ -116,7 +116,6 @@ class KNX:
 	def connect(self):
 		self._xknx = XKNX(
 			daemon_mode=True,
-			own_address=self._get_individual_address(),
 			connection_config=self._get_connection_config()
 		)
 
@@ -167,7 +166,8 @@ class KNX:
 			connection_type=ConnectionType.TUNNELING,
 			local_ip=self._config['tunneling']['local_ip'],
 			gateway_ip=socket.gethostbyname(self._config['tunneling']['host']),
-			gateway_port=self._config['tunneling']['port']
+			gateway_port=self._config['tunneling']['port'],
+			individual_address=self._config['individual_address']
 		)
 
 
