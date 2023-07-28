@@ -1,0 +1,6 @@
+{
+    "mqtt_user": "knx2mqtt",
+    "mqtt_password": "t0p_s3cr3t",
+    "knx_host": "10.0.0.11",
+    "knx_local_ip": "10.0.7.12" 
+}

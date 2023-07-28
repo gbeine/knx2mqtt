@@ -1,5 +1,3 @@
 # Python requirements
-paho.mqtt
-pyinstaller
-pyyaml
+paho-mqtt
 xknx

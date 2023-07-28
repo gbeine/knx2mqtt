@@ -1,13 +1,10 @@
 #!/bin/sh
 #
-# This file should be executed by supervisord
+# Run script for knx2mqtt
 #
-# (c) Gerrit Beine, 2019
+# (c) Gerrit Beine, 2019-2023
 #
 
-touch ${LOGDIR}/.tmpfs
+. venv/bin/activate
 
-. bin/activate
-
-exec bin/knx2mqtt
-
+exec /usr/bin/env python knx2mqtt

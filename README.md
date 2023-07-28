@@ -6,14 +6,16 @@ It is quite simple and does what it's name says: It works as a bridge between KN
 
 ## Installation
 
-The installation requires at least Python 3.7 and `git`.
+The installation requires at least Python 3.9.
+On Raspbian, it is required to install rustc because xknx depends on cryptography which cannot be built without rust.
 
-I usually install my own services under `/opt/services`.
-So, it works out of the box, if you just do:
+See [Install Rust](https://www.rust-lang.org/tools/install) for details.
+
+Philosophy is to install it under /usr/local/lib/knx2mqtt and control it via systemd.
+
 
 ```
-mkdir -p /opt/services
-cd /opt/services
+cd /usr/local/lib
 git clone https://github.com/gbeine/knx2mqtt.git
 cd knx2mqtt
 ./install
@@ -21,47 +23,39 @@ cd knx2mqtt
 
 The `install` script creates a virtual python environment using the `venv` module.
 All required libraries are installed automatically.
+Depending on your system this may take some time.
 
 ## Configuration
 
-The configuration is located in `knx2mqtt.yaml`.
-Place it under `/etc/knx2mqtt/knx2mqtt.yaml` or in the directory where you run knx2mqtt.
-Do the same with the `logging.conf` file.
+The configuration is located in `/etc/knx2mqtt.conf`.
 
-### MQTT
+Each configuration option is also available as command line argument.
 
-First, you need to configure your MQTT server.
+- copy ```knx2mqtt.conf.example```
+- configure as you like
 
-```
-mqtt:
-    host: your.mqtt-server.name
-    port: 1883
-    user: knx2mqtt
-    password: topsecret
-    topic: "home/bus/knx"
-    qos: 0
-    retain: true
-```
-
-Usually, you only need to change the `host`, `user` and `password`.
-Maybe, you want to use another `topic`.
-Leave `qos` and `retain` unless you know what these parameters do.
+| option                 | default              | arguments                | comment                                                            |
+|------------------------|----------------------|--------------------------|--------------------------------------------------------------------|
+| mqtt_host              | 'localhost'          | -m, --mqtt_host          | The hostname of the MQTT server.                                   |
+| mqtt_port              | 1883                 | --mqtt_port              | The port of the MQTT server.                                       |
+| mqtt_keepalive         | 30                   | --mqtt_keepalive         | The keep alive interval for the MQTT server connection in seconds. |
+| mqtt_clientid          | 'fronius2mqtt'       | --mqtt_clientid          | The clientid to send to the MQTT server.                           |
+| mqtt_user              | -                    | -u, --mqtt_user          | The username for the MQTT server connection.                       |
+| mqtt_password          | -                    | -p, --mqtt_password      | The password for the MQTT server connection.                       |
+| mqtt_topic             | 'fronius'            | -t, --mqtt_topic         | The topic to publish MQTT message.                                 |
+| knx_host               | 'localhost'          | --knx_host               | The address of the KNX tunnel device.                              |
+| knx_port               | 3671                 | --knx_port               | The port of the KNX tunnel device.                                 |
+| knx_local_ip           | -                    | --knx_local_ip           | The ip address of the system that connects to KNX.                 |
+| knx_individual_address | -                    | --knx_individual_address | The group address of the system that send telegrams to KNX.        |
+| knx_no_queue           | -                    | --knx_no_queue           | Workaround for scheduling problems of XKNX telegram queue.         |
+| verbose                | -                    | -v, --verbose            | Be verbose while running.                                          |
+| -                      | '/etc/knx2mqtt.conf' | -c, --config             | The path to the config file.                                       |
+| items                  | see below            | -                        | The configuration for the items on the KNX bus.                    |
 
 ### KNX
 
-Currently, only a subset of the xknx configuration options is supported.
+Currently, only KNX tunneling mode is supported.
 It may become more in the future, if I found testing environments with according setups.
-The configuration is now in the Home Assistant style, so if you have an older `xknx.yaml`,  convert your configuration with [XKNX config converter](https://xknx.io/config-converter/).
-
-```
-knx:
-  individual_address: 15.15.249
-  tunneling:
-    host: 192.168.0.11
-    local_ip: 192.168.0.12
-```
-
-Currently, only tunneling is supported as configuration option.
 Feel free to add routing or other options and open a pull request for this.
 
 ### Items
@@ -69,12 +63,19 @@ Feel free to add routing or other options and open a pull request for this.
 Then you can configure your bus topology as items.
 
 ```
-items:
-- address: 0/8/15
-  type: DTPTemperature
-- address: 4/7/15
-  type: DTPHumidity
-  ...
+    ...
+    "items": [
+        {
+            "address": "5/0/10",
+            "type": "DPTTemperature"
+        },
+        {
+            "address": "5/0/20",
+            "type": "DPTHumidity"
+        },
+        ...
+    ]
+    ...
 ```
 
 Each item need an `address` (the group address) and a `type`.
@@ -87,19 +88,6 @@ The default operating mode for an object is to listen on the KNX and publish the
 That may be changed using the following settings:
 
 * `mqtt_subscribe` (default: false): if set to `true`, changes on any related MQTT topic will be processed
-* `mqtt_publish` (default: true): if set to `true`, the values for this item will be published on all related MQTT topics 
-* `knx_subscribe` (default: true): if set to `true`, changes on any related KNX address will be processed
-* `knx_publish` (default: false): if set to `true`, the values for this item will be published on all related KXN addresses 
-
-To prevent communication loops, the bridge caches all states that have been published.
-If an event for an item is received, the bridge checks if the value has changed. 
-The value will be published only to addresses with valued that differ from the current one.
-This works, no matter if the source of the event is MQTT or KNX.
-
-**Attention:** You can still configure loops using the same MQTT topic or KNX address for different things!
-
-It is possible to add addtional MQTT topics and KNX addresses.
-Examples are located in the configuration file in the project.
 
 ### Publishing
 
@@ -109,13 +97,7 @@ So, the Date exposing sensor in the example is listening for `home/bus/knx/0/0/1
 
 ## Running knx2mqtt
 
-I use [Supervisor](http://supervisord.org/) to manage my local services.
-
-For this, a configuration file and an executable are part of the project.
-
-The configuration file is located under `supervisor`, just copy or link it to `/etc/supervisor/conf.d`.
-
-The `run` script expects an environment variable named `LOGDIR` where the logfile should be written. This is set by the supervisor configuration, so change it there.
+I use [systemd](https://systemd.io/) to manage my local services.
 
 ## Support
 
