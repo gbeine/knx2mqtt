@@ -187,7 +187,8 @@ def start_knx():
         global knx_tunnel
         knx_tunnel = XKNX(daemon_mode=True, connection_config=config)
         knx_tunnel.telegram_queue.register_telegram_received_cb(
-            telegram_received_cb=on_telegram_received
+            telegram_received_cb=on_telegram_received,
+            group_addresses=daemon_args.knx_subscribe
         )
         await knx_tunnel.start()
         await knx_tunnel.stop()
@@ -288,15 +289,24 @@ def init_items():
 
     daemon_args.dpt_types = {}
     daemon_args.mqtt_subscribe = []
+    daemon_args.knx_subscribe = []
     item_states = {}
 
     for item in daemon_args.items:
+        if not 'knx_subscribe' in item:
+            item['knx_subscribe'] = True
+        if not 'mqtt_subscribe' in item:
+            item['mqtt_subscribe'] = False
+
         if 'address' in item:
             item_states[item['address']] = None
+
             if 'type' in item:
                 daemon_args.dpt_types[item['address']] = item['type']
-            if 'mqtt_subscribe' in item and item['mqtt_subscribe']:
+            if item['mqtt_subscribe']:
                 daemon_args.mqtt_subscribe.append(item['address'])
+            if item['knx_subscribe']:
+                daemon_args.knx_subscribe.append(GroupAddress(item['address']))
 
 
 def main():
