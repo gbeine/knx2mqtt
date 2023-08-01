@@ -73,10 +73,8 @@ def create_payload_for_telegram(group_address, value):
     payload = None
 
     try:
-        if dpt_type == 'DPTBinary' and type(value) == str:
-            payload = DPTBinary(int(value.lower() == 'true'))
-        elif dpt_type == 'DPTBinary' and type(value) == bool:
-            payload = DPTBinary(int(value == True))
+        if dpt_type == 'DPTBinary':
+            payload = DPTBinary(int(str(value).lower() in ['true', '1', 'on', 'yes']))
         else:
             dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
             payload = DPTArray(dpt_class.to_knx(value))
