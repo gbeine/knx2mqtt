@@ -4,7 +4,8 @@ RUN set -eux; \
         apk add --no-cache \
                 gcc \
                 libc-dev \
-                libffi-dev
+                libffi-dev \
+                cargo
 
 WORKDIR /app
 
