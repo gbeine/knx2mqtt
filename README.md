@@ -6,6 +6,12 @@ It is quite simple and does what it's name says: It works as a bridge between KN
 
 ## Installation
 
+### Installation using Docker
+
+```
+docker run -it --rm --name knx2mqtt -v knx2mqtt.conf:/etc/knx2mqtt.conf docker.io/gbeine/knx2mqtt
+```
+
 ### Native installation with Python venv
 
 The installation requires at least Python 3.9.
