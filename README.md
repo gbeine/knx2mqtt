@@ -2,9 +2,11 @@
 
 I've created this project as a replacement for the KNX integration of [HomeAssistant](https://home-assistant.io/) that worked not stable in my environment.
 
-It is quite simple and does what it's name says: It works as a bridge between KNX and MQTT tranlating messages between these in both directions.
+It is quite simple and does what it's name says: It works as a bridge between KNX and MQTT translating messages between these in both directions.
 
 ## Installation
+
+### Native installation with Python venv
 
 The installation requires at least Python 3.9.
 On Raspbian, it is required to install rustc because xknx depends on cryptography which cannot be built without rust.
@@ -12,7 +14,6 @@ On Raspbian, it is required to install rustc because xknx depends on cryptograph
 See [Install Rust](https://www.rust-lang.org/tools/install) for details.
 
 Philosophy is to install it under /usr/local/lib/knx2mqtt and control it via systemd.
-
 
 ```
 cd /usr/local/lib
@@ -31,26 +32,28 @@ The configuration is located in `/etc/knx2mqtt.conf`.
 
 Each configuration option is also available as command line argument.
 
-- copy ```knx2mqtt.conf.example```
+- copy `knx2mqtt.conf.example`
 - configure as you like
 
-| option                 | default              | arguments                | comment                                                            |
-|------------------------|----------------------|--------------------------|--------------------------------------------------------------------|
-| mqtt_host              | 'localhost'          | -m, --mqtt_host          | The hostname of the MQTT server.                                   |
-| mqtt_port              | 1883                 | --mqtt_port              | The port of the MQTT server.                                       |
-| mqtt_keepalive         | 30                   | --mqtt_keepalive         | The keep alive interval for the MQTT server connection in seconds. |
-| mqtt_clientid          | 'fronius2mqtt'       | --mqtt_clientid          | The clientid to send to the MQTT server.                           |
-| mqtt_user              | -                    | -u, --mqtt_user          | The username for the MQTT server connection.                       |
-| mqtt_password          | -                    | -p, --mqtt_password      | The password for the MQTT server connection.                       |
-| mqtt_topic             | 'fronius'            | -t, --mqtt_topic         | The topic to publish MQTT message.                                 |
-| knx_host               | 'localhost'          | --knx_host               | The address of the KNX tunnel device.                              |
-| knx_port               | 3671                 | --knx_port               | The port of the KNX tunnel device.                                 |
-| knx_local_ip           | -                    | --knx_local_ip           | The ip address of the system that connects to KNX.                 |
-| knx_individual_address | -                    | --knx_individual_address | The group address of the system that send telegrams to KNX.        |
-| knx_no_queue           | -                    | --knx_no_queue           | Workaround for scheduling problems of XKNX telegram queue.         |
-| verbose                | -                    | -v, --verbose            | Be verbose while running.                                          |
-| -                      | '/etc/knx2mqtt.conf' | -c, --config             | The path to the config file.                                       |
-| items                  | see below            | -                        | The configuration for the items on the KNX bus.                    |
+| option                   | default              | arguments                  | comment                                                                                |
+|--------------------------|----------------------|----------------------------|----------------------------------------------------------------------------------------|
+| `mqtt_host`              | 'localhost'          | `-m`, `--mqtt_host`        | The hostname of the MQTT server.                                                       |
+| `mqtt_port`              | 1883                 | `--mqtt_port`              | The port of the MQTT server.                                                           |
+| `mqtt_keepalive`         | 30                   | `--mqtt_keepalive`         | The keep alive interval for the MQTT server connection in seconds.                     |
+| `mqtt_clientid`          | 'knx2mqtt'           | `--mqtt_clientid`          | The clientid to send to the MQTT server.                                               |
+| `mqtt_user`              | -                    | `-u`, `--mqtt_user`        | The username for the MQTT server connection.                                           |
+| `mqtt_password`          | -                    | `-p`, `--mqtt_password`    | The password for the MQTT server connection.                                           |
+| `mqtt_topic`             | 'bus/knx'            | `-t`, `--mqtt_topic`       | The topic to publish MQTT message.                                                     |
+| `mqtt_tls_version`       | 'TLSv1.2'            | `--mqtt_tls_version`       | The TLS version to use for MQTT. One of TLSv1, TLSv1.1, TLSv1.2.                       |
+| `mqtt_verify_mode`       | 'CERT_REQUIRED'      | `--mqtt_verify_mode`       | The SSL certificate verification mode. One of CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED. |
+| `knx_host`               | 'localhost'          | `--knx_host`               | The address of the KNX tunnel device.                                                  |
+| `knx_port`               | 3671                 | `--knx_port`               | The port of the KNX tunnel device.                                                     |
+| `knx_local_ip`           | -                    | `--knx_local_ip`           | The ip address of the system that connects to KNX.                                     |
+| `knx_individual_address` | -                    | `--knx_individual_address` | The group address of the system that send telegrams to KNX.                            |
+| `knx_no_queue`           | -                    | `--knx_no_queue`           | Workaround for scheduling problems of XKNX telegram queue.                             |
+| `verbose`                | -                    | `-v`, `--verbose`          | Be verbose while running.                                                              |
+| -                        | '/etc/knx2mqtt.conf' | `-c`, `--config`           | The path to the config file.                                                           |
+| `items`                  | see below            | -                          | The configuration for the items on the KNX bus.                                        |
 
 ### KNX
 
@@ -93,7 +96,7 @@ That may be changed using the following settings:
 
 All values are published using the group address and the MQTT topic.
 
-So, the Date exposing sensor in the example is listening for `home/bus/knx/0/0/1` and the switch is listening on and publishing to `home/bus/knx/0/1/1`.
+So, the Date exposing sensor in the example is listening for `bus/knx/0/0/1` and the switch is listening on and publishing to `bus/knx/0/1/1`.
 
 ## Running knx2mqtt
 
@@ -106,4 +109,4 @@ But feel free to submit issues and PRs, I'll check for it and honor your contrib
 
 ## License
 
-The whole project is licensed under MIT license. Stay fair.
+The whole project is licensed under BSD-3-Clause license. Stay fair.

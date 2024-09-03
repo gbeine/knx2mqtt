@@ -4,9 +4,12 @@ import argparse
 import asyncio
 import importlib
 import json
+import logging
 import os
 import socket
+import ssl
 import sys
+import time
 import traceback
 
 import paho.mqtt.client as mqtt
@@ -21,11 +24,22 @@ from xknx.telegram import Telegram, TelegramDirection
 
 XKNX_DPT_MODULE_STR = "xknx.dpt"
 
-
 knx_tunnel = None
 mqtt_client = None
 daemon_args = None
 item_states = None
+
+verify_mode = {
+    'CERT_NONE': ssl.CERT_NONE,
+    'CERT_OPTIONAL': ssl.CERT_OPTIONAL,
+    'CERT_REQUIRED': ssl.CERT_REQUIRED
+}
+
+tls_versions = {
+    'TLSv1': ssl.PROTOCOL_TLSv1,
+    'TLSv1.1': ssl.PROTOCOL_TLSv1_1,
+    'TLSv1.2': ssl.PROTOCOL_TLSv1_2
+}
 
 
 def eprint(*args, **kwargs):
@@ -116,6 +130,8 @@ def publish_to_mqtt(address, value):
 
     print("Topic: {}, Payload: {}".format(topic, value))
     mqtt_client.publish(topic, value)
+    if daemon_args.timestamp:
+        mqtt_client.publish("{}/timestamp".format(topic), time.time(), retain=True)
 
 
 async def on_telegram_received(telegram):
@@ -159,8 +175,12 @@ def on_mqtt_received(client, userdata, message):
 
 def start_mqtt():
     global daemon_args
-    mqtt_client = mqtt.Client(daemon_args.mqtt_clientid)
+    mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    cert_reqs = verify_mode[daemon_args.mqtt_verify_mode] if daemon_args.mqtt_verify_mode in verify_mode else None
+    tls_version = tls_versions[daemon_args.mqtt_tls_version] if daemon_args.mqtt_tls_version in tls_versions else None
+    mqtt_client.tls_set(cert_reqs=cert_reqs, tls_version=tls_version)
     if daemon_args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
         mqtt_client.enable_logger()
     if daemon_args.mqtt_user is not None and daemon_args.mqtt_password is not None:
         mqtt_client.username_pw_set(daemon_args.mqtt_user, daemon_args.mqtt_password)
@@ -218,6 +238,12 @@ def parse_args():
     parser.add_argument('-t', '--mqtt_topic', type=str,
             default='bus/knx',
             help='The topic to publish MQTT message. Default is bus/knx')
+    parser.add_argument('--mqtt_tls_version', type=str,
+            default='TLSv1.2',
+            help='The TLS version to use for MQTT. One of TLSv1, TLSv1.1, TLSv1.2. Default is TLSv1.2')
+    parser.add_argument('--mqtt_verify_mode', type=str,
+            default='CERT_REQUIRED',
+            help='The SSL certificate verification mode. One of CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED. Default is CERT_REQUIRED')
     parser.add_argument('-k', '--knx_host', type=str,
             default='localhost',
             help='The hostname of the KNX gateway. Default is localhost')
@@ -236,6 +262,10 @@ def parse_args():
     parser.add_argument('-c', '--config', type=str,
             default='/etc/knx2mqtt.conf',
             help='The path to the config file. Default is /etc/knx2mqtt.conf')
+    parser.add_argument('-z', '--timestamp',
+            default=False,
+            action='store_true',
+            help='Publish timestamps for all topics, e.g. for monitoring purposes.')
     parser.add_argument('-v', '--verbose',
             default=False,
             action='store_true',
@@ -268,6 +298,10 @@ def parse_config():
             daemon_args.mqtt_password = data['mqtt_password']
         if 'mqtt_topic' in data:
             daemon_args.mqtt_topic = data['mqtt_topic']
+        if 'mqtt_tls_version' in data:
+            daemon_args.mqtt_tls_version = data['mqtt_tls_version']
+        if 'mqtt_verify_mode' in data:
+            daemon_args.mqtt_verify_mode = data['mqtt_verify_mode']
         if 'knx_host' in data:
             daemon_args.knx_host = data['knx_host']
         if 'knx_port' in data:
@@ -278,6 +312,8 @@ def parse_config():
             daemon_args.knx_individual_address = data['knx_individual_address']
         if 'knx_no_queue' in data:
             daemon_args.knx_no_queue = data['knx_no_queue']
+        if 'timestamp' in data:
+            daemon_args.timestamp = data['timestamp']
         if 'items' in data:
             daemon_args.items = data['items']
 
