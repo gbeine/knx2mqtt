@@ -5,6 +5,7 @@ RUN set -eux; \
                 gcc \
                 libc-dev \
                 libffi-dev \
+                openssl-dev \
                 cargo
 
 WORKDIR /app
