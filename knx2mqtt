@@ -134,7 +134,7 @@ def publish_to_mqtt(address, value):
         mqtt_client.publish("{}/timestamp".format(topic), time.time(), retain=True)
 
 
-async def on_telegram_received(telegram):
+def on_telegram_received(telegram):
     try:
         if telegram.direction != TelegramDirection.INCOMING:
             return
