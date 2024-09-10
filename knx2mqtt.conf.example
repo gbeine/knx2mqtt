@@ -1,6 +1,42 @@
 {
+    "mqtt_host": "localhost",
+    "mqtt_port": "1883"
+    "mqtt_port": "keepalive"
+    "mqtt_clientid": "knx2mqtt"
     "mqtt_user": "knx2mqtt",
     "mqtt_password": "t0p_s3cr3t",
+    "mqtt_topic": "bus/knx",
+    "mqtt_tls": "false",
+    "mqtt_tls_version": "TLSv1.2",
+    "mqtt_verify_mode": "CERT_NONE",
+    "mqtt_ssl_ca_path": "/etc/ssl/myca.pem",
+    "mqtt_tls_no_verify": "false",
     "knx_host": "10.0.0.11",
-    "knx_local_ip": "10.0.7.12" 
+    "knx_local_ip": "10.0.7.12",
+    "knx_individual_address": "15.15.250",
+    "knx_no_queue": "true",
+    "verbose": "false",
+    "items": [
+        {
+            "address": "4/0/11",
+            "type": "DPTBinary",
+            "mqtt_subscribe": "true"
+        },
+        {
+            "address": "4/0/21",
+            "type": "DPTUpDown"
+        },
+        {
+            "address": "5/0/11",
+            "type": "DPTTemperature"
+        },
+        {
+            "address": "5/0/17",
+            "type": "DPTHumidity"
+        },
+        {
+            "address": "5/0/18",
+            "type": "DPTPartsPerMillion"
+        }
+   ]
 }

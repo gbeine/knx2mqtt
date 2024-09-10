@@ -50,13 +50,17 @@ Each configuration option is also available as command line argument.
 | `mqtt_user`              | -                    | `-u`, `--mqtt_user`        | The username for the MQTT server connection.                                           |
 | `mqtt_password`          | -                    | `-p`, `--mqtt_password`    | The password for the MQTT server connection.                                           |
 | `mqtt_topic`             | 'bus/knx'            | `-t`, `--mqtt_topic`       | The topic to publish MQTT message.                                                     |
+| `mqtt_tls`               | -                    | `--mqtt_tls`               | Use SSL/TLS encryption for MQTT connection.                                            |
 | `mqtt_tls_version`       | 'TLSv1.2'            | `--mqtt_tls_version`       | The TLS version to use for MQTT. One of TLSv1, TLSv1.1, TLSv1.2.                       |
 | `mqtt_verify_mode`       | 'CERT_REQUIRED'      | `--mqtt_verify_mode`       | The SSL certificate verification mode. One of CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED. |
+| `mqtt_ssl_ca_path`       | -                    | `--mqtt_ssl_ca_path`       | The SSL certificate authority file to verify the MQTT server.                          |
+| `mqtt_tls_no_verify`     | -                    | `--mqtt_tls_no_verify`     | Do not verify SSL/TLS constraints like hostname.                                       |
 | `knx_host`               | 'localhost'          | `--knx_host`               | The address of the KNX tunnel device.                                                  |
 | `knx_port`               | 3671                 | `--knx_port`               | The port of the KNX tunnel device.                                                     |
 | `knx_local_ip`           | -                    | `--knx_local_ip`           | The ip address of the system that connects to KNX.                                     |
 | `knx_individual_address` | -                    | `--knx_individual_address` | The group address of the system that send telegrams to KNX.                            |
 | `knx_no_queue`           | -                    | `--knx_no_queue`           | Workaround for scheduling problems of XKNX telegram queue.                             |
+| `timestamp`              | -                    | `-z`, `--timestamp`        | Publish timestamps for all topics, e.g. for monitoring purposes.                       |
 | `verbose`                | -                    | `-v`, `--verbose`          | Be verbose while running.                                                              |
 | -                        | '/etc/knx2mqtt.conf' | `-c`, `--config`           | The path to the config file.                                                           |
 | `items`                  | see below            | -                          | The configuration for the items on the KNX bus.                                        |
