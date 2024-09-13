@@ -374,6 +374,7 @@ def main():
     global daemon_args, mqtt_client
     daemon_args = parse_args()
     parse_config()
+    init_items()
     # Verbosity
     if daemon_args.verbose:
         logging.basicConfig(level=logging.DEBUG)
