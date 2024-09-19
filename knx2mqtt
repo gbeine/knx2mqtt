@@ -68,7 +68,7 @@ def extract_payload_from_telegram(group_address, telegram):
 
     try:
         if dpt_type == 'DPTBinary':
-            value = str(bool(payload.value.value)).lower()
+            value = int(bool(payload.value.value))
         else:
             if dpt_type is None:
                 dpt_type = payload.value.__class__.__name__
