@@ -62,7 +62,7 @@ def extract_payload_from_telegram(group_address, telegram):
     dpt_type = get_dpt_type_for_address(group_address)
     payload = telegram.payload
 
-    print("Address: {}, DPT Type: {}, Payload: {}".format(group_address, dpt_type, payload))
+    logging.info("Address: {}, DPT Type: {}, Payload: {}".format(group_address, dpt_type, payload))
 
     value = None
 
@@ -83,7 +83,7 @@ def extract_payload_from_telegram(group_address, telegram):
 def create_payload_for_telegram(group_address, value):
     dpt_type = get_dpt_type_for_address(group_address)
 
-    print("Address: {}, DPT Type: {}, Value: {}".format(group_address, dpt_type, value))
+    logging.info("Address: {}, DPT Type: {}, Value: {}".format(group_address, dpt_type, value))
 
     payload = None
 
@@ -102,7 +102,7 @@ def create_payload_for_telegram(group_address, value):
 def publish_to_knx(address, payload):
     global daemon_args, knx_tunnel
 
-    print("Address: {}, Payload: {}".format(address, payload))
+    logging.info("Address: {}, Payload: {}".format(address, payload))
 
     source_address = IndividualAddress(daemon_args.knx_individual_address)
     group_address = GroupAddress(address)
@@ -129,7 +129,7 @@ def publish_to_mqtt(address, value):
 
     item_states[address] = str(value)
 
-    print("Topic: {}, Payload: {}".format(topic, value))
+    logging.info("Topic: {}, Payload: {}".format(topic, value))
     mqtt_client.publish(topic, str(value))
     if daemon_args.timestamp:
         mqtt_client.publish("{}/timestamp".format(topic), time.time(), retain=True)
@@ -152,7 +152,7 @@ def on_mqtt_connect(client, userdata, flags, reason_code, properties):
 
     for address in daemon_args.mqtt_subscribe:
         topic = "{}/{}".format(daemon_args.mqtt_topic, address)
-        print("Subscribe: {}".format(topic))
+        logging.info("Subscribe: {}".format(topic))
         client.subscribe(topic)
 
 
@@ -164,7 +164,7 @@ def on_mqtt_received(client, userdata, message):
         value = str(message.payload.decode())
 
         if item_states[group_address] == value:
-            print("Received value for {} is last state sent: {}".format(group_address, value))
+            logging.info("Received value for {} is last state sent: {}".format(group_address, value))
             return
 
         payload = create_payload_for_telegram(group_address, value)
@@ -184,7 +184,6 @@ def init_mqtt():
         if 'mqtt_ssl_ca_path' in daemon_args:
             mqtt_client.tls_set(daemon_args.mqtt_ssl_ca_path)#, cert_reqs=cert_reqs, tls_version=tls_version)
         elif cert_reqs is not None and tls_version is not None:
-            print(cert_reqs)
             mqtt_client.tls_set(cert_reqs=cert_reqs, tls_version=tls_version)
         else:
             logging.error("Invalid TLS configuration.")
