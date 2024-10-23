@@ -1,0 +1,14 @@
+version: '3'
+services:
+  knx2mqtt:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: docker.io/gbeine/knx2mqtt
+    container_name: knx2mqtt
+    volumes:
+      - ./knx2mqtt.conf:/etc/knx2mqtt.conf
+      - ./knx2mqtt:/app/knx2mqtt
+    stdin_open: true 
+    tty: true        
+    restart: unless-stopped
