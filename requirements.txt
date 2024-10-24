@@ -1,3 +1,6 @@
 # Python requirements
 paho-mqtt
 xknx
+ipython
+ipdb
+pdbpp

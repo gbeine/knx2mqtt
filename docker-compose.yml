@@ -12,3 +12,6 @@ services:
     stdin_open: true 
     tty: true        
     restart: unless-stopped
+
+# docker compose restart knx2mqtt && docker compose logs knx2mqtt -f
+# docker compose run knx2mqtt  #debug interattivo

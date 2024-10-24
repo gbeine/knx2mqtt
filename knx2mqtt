@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# docker compose restart knx2mqtt && docker compose logs knx2mqtt -f
+
+
 import argparse
 import asyncio
 import importlib
@@ -43,11 +46,28 @@ daemon_args = None
 item_states = None
 
 
-log_formatter = logging.Formatter(
+# Codici ANSI per i colori
+class ColoredFormatter(logging.Formatter):
+    COLORS = {
+        logging.DEBUG: "\033[94m",  # Blu
+        logging.INFO: "\033[92m",  # Green
+        logging.WARNING: "\033[93m",  # Yellow
+        logging.ERROR: "\033[91m",  # Red
+        logging.CRITICAL: "\033[95m",  # Magenta
+    }
+    RESET = "\033[0m"  # Reset del colore
+
+    def format(self, record):
+        log_color = self.COLORS.get(record.levelno, self.RESET)
+        record.msg = f"{log_color}{record.msg}{self.RESET}"
+        return super().format(record)
+
+
+# Formattatore e gestore
+log_formatter = ColoredFormatter(
     "[%(asctime)s] p%(process)s {%(funcName)-15s:%(lineno)d} %(levelname)-8s - %(message)s",
     "%m-%d %H:%M:%S",
 )
-
 
 console = logging.StreamHandler()
 console.setFormatter(log_formatter)
@@ -108,6 +128,15 @@ def create_payload_for_telegram(group_address, value):
     try:
         if dpt_type == "DPTBinary":
             payload = DPTBinary(int(str(value).lower() in ["true", "1", "on", "yes"]))
+        elif dpt_type == "DPTTemperature":
+            # breakpoint()
+            # import xknx.dpt.dpt_9 as temp
+            # payload = temp.DPTTemperature.to_knx(value)
+            # app_log.error("todo")
+
+            dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
+            payload = dpt_class.to_knx(value)
+
         else:
             dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
             payload = DPTArray(dpt_class.to_knx(value))
@@ -148,6 +177,7 @@ def publish_to_mqtt(address, value):
     item_states[address] = str(value)
 
     app_log.info("Topic: {}, Payload: {}".format(topic, value))
+
     mqtt_client.publish(topic, str(value))
     if daemon_args.timestamp:
         mqtt_client.publish("{}/timestamp".format(topic), time.time(), retain=True)
@@ -172,6 +202,12 @@ def on_mqtt_connect(client, userdata, flags, reason_code, properties):
         topic = "{}/{}".format(daemon_args.mqtt_topic, address)
         app_log.info("Subscribe: {}".format(topic))
         client.subscribe(topic)
+
+
+def on_mqtt_disconnect(client, userdata, rc):
+    if rc != 0:
+        app_log.warning("MQTT connection lost, retrying...")
+        client.reconnect()
 
 
 def on_mqtt_received(client, userdata, message):
@@ -248,12 +284,31 @@ def start_knx():
     async def run():
         global knx_tunnel
         knx_tunnel = XKNX(daemon_mode=True, connection_config=config)
+
+        app_log.debug("Callback for received telegrams.")
         knx_tunnel.telegram_queue.register_telegram_received_cb(
             telegram_received_cb=on_telegram_received,
             group_addresses=daemon_args.knx_subscribe,
         )
-        await knx_tunnel.start()
-        await knx_tunnel.stop()
+
+        app_log.debug("Trying to start KNX tunnel...")
+        try:
+            publish_to_mqtt("status", "online")
+            app_log.info("KNX Tunnel starting.")
+            await knx_tunnel.start()
+        except Exception as e:
+            publish_to_mqtt("status", "offline")
+            app_log.error("Startingt KNX tunnel: %s", str(e))
+            return
+
+        app_log.debug("Attendi prima di fermare il tunnel...")
+        try:
+            await asyncio.sleep(5)
+            await knx_tunnel.stop()
+            publish_to_mqtt("status", "offline")
+            app_log.info("KNX Tunnel stopped.")
+        except Exception as e:
+            app_log.error("Closing KNX tunnel: %s", str(e))
 
     asyncio.run(run())
 
