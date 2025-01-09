@@ -41,7 +41,7 @@ knx_tunnel = None
 mqtt_client = None
 daemon_args = None
 item_states = None
-
+item_redirects = {}
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -92,7 +92,6 @@ def create_payload_for_telegram(group_address, value):
             payload = DPTBinary(int(str(value).lower() in ['true', '1', 'on', 'yes']))
         else:
             dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
-            payload = DPTArray(dpt_class.to_knx(value))
             payload = dpt_class.to_knx(value)
     except Exception as e:
         eprint(traceback.format_exc())
@@ -124,9 +123,12 @@ def publish_to_knx(address, payload):
 
 
 def publish_to_mqtt(address, value):
-    global mqtt_client, daemon_args, item_states
+    global mqtt_client, daemon_args, item_states, item_redirects
 
-    topic = "{}/{}".format(daemon_args.mqtt_topic, address)
+    if address in item_redirects:
+        topic = "{}/{}".format(daemon_args.mqtt_topic, item_redirects[address])
+    else:
+        topic = "{}/{}".format(daemon_args.mqtt_topic, address)
 
     item_states[address] = str(value)
 
@@ -158,11 +160,14 @@ def on_mqtt_connect(client, userdata, flags, reason_code, properties):
 
 
 def on_mqtt_received(client, userdata, message):
-    global daemon_args, item_states
+    global daemon_args, item_states, item_redirects
 
     try:
         group_address = message.topic.replace("{}/".format(daemon_args.mqtt_topic), '')
         value = str(message.payload.decode())
+
+        if group_address in item_redirects:
+            group_address = item_redirects[group_address]
 
         if item_states[group_address] == value:
             logging.info("Received value for {} is last state sent: {}".format(group_address, value))
@@ -346,7 +351,7 @@ def parse_config():
 
 
 def init_items():
-    global daemon_args, item_states
+    global daemon_args, item_states, item_redirects
 
     daemon_args.dpt_types = {}
     daemon_args.mqtt_subscribe = []
@@ -364,8 +369,17 @@ def init_items():
 
             if 'type' in item:
                 daemon_args.dpt_types[item['address']] = item['type']
-            if item['mqtt_subscribe']:
-                daemon_args.mqtt_subscribe.append(item['address'])
+
+            if 'override_topic' in item:
+                item_redirects[item['address']] = item['override_topic']
+                item_redirects[item['override_topic']] = item['address']
+                
+                if item['mqtt_subscribe']:
+                    daemon_args.mqtt_subscribe.append(item['override_topic'])
+            else:
+                if item['mqtt_subscribe']:
+                    daemon_args.mqtt_subscribe.append(item['address'])
+            
             if item['knx_subscribe']:
                 daemon_args.knx_subscribe.append(GroupAddress(item['address']))
 
