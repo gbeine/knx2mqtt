@@ -173,7 +173,11 @@ def on_mqtt_received(client, userdata, message):
         if item_states[group_address] == value:
             logging.info("Received value for {} is last state sent: {}".format(group_address, value))
             return
-
+        
+        if message.retain and not daemon_args.mqtt_resend_retained:
+            logging.info("Received value for {} is a retained value. Not resending due to config: {}".format(group_address, value))
+            return
+        
         payload = create_payload_for_telegram(group_address, value)
 
         publish_to_knx(group_address, payload)
@@ -311,6 +315,7 @@ def parse_config():
         data = json.load(config_file)
 
         daemon_args.mqtt_retain = data['mqtt_retain'] if 'mqtt_retain' in data else False
+        daemon_args.mqtt_resend_retained = data['mqtt_resend_retained'] if 'mqtt_resend_retained' in data else False
 
         if 'mqtt_host' in data:
             daemon_args.mqtt_host = data['mqtt_host']

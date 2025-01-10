@@ -55,6 +55,7 @@ Each configuration option is also available as command line argument.
 | `mqtt_verify_mode`       | 'CERT_REQUIRED'      | `--mqtt_verify_mode`       | The SSL certificate verification mode. One of CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED. |
 | `mqtt_ssl_ca_path`       | -                    | `--mqtt_ssl_ca_path`       | The SSL certificate authority file to verify the MQTT server.                          |
 | `mqtt_retain`            | false                |                            | Retain messages published on mqtt                                                      |
+| `mqtt_resend_retained`   | false                |                            | Resend retained messages received on mqtt to knx                                       |
 | `mqtt_tls_no_verify`     | -                    | `--mqtt_tls_no_verify`     | Do not verify SSL/TLS constraints like hostname.                                       |
 | `knx_host`               | 'localhost'          | `--knx_host`               | The address of the KNX tunnel device.                                                  |
 | `knx_port`               | 3671                 | `--knx_port`               | The port of the KNX tunnel device.                                                     |
@@ -76,19 +77,30 @@ Feel free to add routing or other options and open a pull request for this.
 
 Then you can configure your bus topology as items.
 
+Each item need an `address` (the group address) and a `type`.
+
+Optionally you can specify `override_topic`, then the representation on mqtt will not be `1/2/3` (Adress) but the provided topic name.
+
+The default operating mode for an object is to listen on the KNX and publish the telegram values to MQTT.
+
+That may be changed using the following settings:
+
+* `mqtt_subscribe` (default: false): if set to `true`, changes on any related MQTT topic will be processed
+
 ```
     ...
     "items": [
         {
             "address": "5/0/10",
-            "type": "DPTTemperature"
+            "type": "DPTTemperature",
+            "mqtt_subscribe": true
         },
         {
             "address": "5/0/20",
             "type": "DPTHumidity"
         },
         {
-            "override_topic": "use/this/on/mqtt"
+            "override_topic": "use/this/on/mqtt",
             "address": "5/0/29",
             "type": "DPTHumidity"
         },
@@ -97,17 +109,11 @@ Then you can configure your bus topology as items.
     ...
 ```
 
-Each item need an `address` (the group address) and a `type`.
-Optionally you can specify `override_topic`, then the representation on mqtt will not be `1/2/3` (Adress) but the provided topic name.
 Unfortunately, the list of types is not part of the xknx documentation.
 But the examples in the file I provide with the project may fit for the most purposes.
 All supported types can be found in the [xknx sources](https://github.com/XKNX/xknx/blob/main/xknx/dpt/__init__.py).
 
-The default operating mode for an object is to listen on the KNX and publish the telegram values to MQTT.
 
-That may be changed using the following settings:
-
-* `mqtt_subscribe` (default: false): if set to `true`, changes on any related MQTT topic will be processed
 
 ### Publishing
 

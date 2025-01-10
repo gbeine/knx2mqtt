@@ -8,6 +8,7 @@
     "mqtt_topic": "bus/knx",
     "mqtt_tls": false,
     "mqtt_retain": false,
+    "mqtt_resend_retained": false,
     "mqtt_tls_version": "TLSv1.2",
     "mqtt_verify_mode": "CERT_NONE",
     "mqtt_ssl_ca_path": "/etc/ssl/myca.pem",
