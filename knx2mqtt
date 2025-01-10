@@ -317,15 +317,15 @@ def parse_config():
         if 'mqtt_topic' in data:
             daemon_args.mqtt_topic = data['mqtt_topic']
         if 'mqtt_tls' in data:
-            daemon_args.mqtt_tls = bool(data['mqtt_tls'])
+            daemon_args.mqtt_tls = data['mqtt_tls'].lower() == 'true'
         if 'mqtt_tls_version' in data:
-            daemon_args.mqtt_tls = data['mqtt_tls_version']
+            daemon_args.mqtt_tls_version = data['mqtt_tls_version']
         if 'mqtt_verify_mode' in data:
-            daemon_args.mqtt_tls = data['mqtt_verify_mode']
+            daemon_args.mqtt_verify_mode = data['mqtt_verify_mode']
         if 'mqtt_ssl_ca_path' in data:
             daemon_args.mqtt_ssl_ca_path = data['mqtt_ssl_ca_path']
         if 'mqtt_tls_no_verify' in data:
-            daemon_args.mqtt_tls_no_verify = bool(data['mqtt_tls_no_verify'])
+            daemon_args.mqtt_tls_no_verify = data['mqtt_tls_no_verify'].lower() == 'true'
         if 'knx_host' in data:
             daemon_args.knx_host = data['knx_host']
         if 'knx_port' in data:
@@ -335,11 +335,11 @@ def parse_config():
         if 'knx_individual_address' in data:
             daemon_args.knx_individual_address = data['knx_individual_address']
         if 'knx_no_queue' in data:
-            daemon_args.knx_no_queue = data['knx_no_queue']
+            daemon_args.knx_no_queue = data['knx_no_queue'].lower() == 'true'
         if 'timestamp' in data:
-            daemon_args.timestamp = data['timestamp']
+            daemon_args.timestamp = data['timestamp'].lower() == 'true'
         if 'verbose' in data:
-            daemon_args.verbose = data['verbose']
+            daemon_args.verbose = data['verbose'].lower() == 'true'
         if 'items' in data:
             daemon_args.items = data['items']
 
