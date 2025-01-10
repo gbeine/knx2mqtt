@@ -20,6 +20,7 @@ from xknx.io.knxip_interface import ConnectionType, ConnectionConfig
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import GroupValueWrite
 from xknx.telegram import Telegram, TelegramDirection
+from logging.handlers import TimedRotatingFileHandler
 
 
 XKNX_DPT_MODULE_STR = "xknx.dpt"
@@ -389,15 +390,31 @@ def main():
     daemon_args = parse_args()
     parse_config()
     init_items()
+    
     # Verbosity
     if daemon_args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        loglevel = logging.DEBUG
+    else:
+        loglevel = logging.INFO
+
+    logDir = "/var/log/knx2mqtt"
+
+    if not os.path.exists(logDir):
+        os.mkdir(logDir)
+
+    logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)s %(message)s',
+                      datefmt='%Y-%m-%d %H:%M:%S',
+                      level=loglevel,
+                      handlers=[
+                        TimedRotatingFileHandler(logDir + "current.log", when="midnight", interval=1, backupCount=14),
+                        logging.StreamHandler()
+                      ])
+
     # MQTT connection
     mqtt_client = init_mqtt()
     mqtt_client.loop_start()
     # KNX connection
     start_knx()
-
 
 if __name__ == "__main__":
     main()
