@@ -406,7 +406,7 @@ def main():
                       datefmt='%Y-%m-%d %H:%M:%S',
                       level=loglevel,
                       handlers=[
-                        TimedRotatingFileHandler(logDir + "current.log", when="midnight", interval=1, backupCount=14),
+                        TimedRotatingFileHandler(logDir + "/current.log", when="midnight", interval=1, backupCount=14),
                         logging.StreamHandler()
                       ])
 
