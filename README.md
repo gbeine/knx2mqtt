@@ -54,6 +54,7 @@ Each configuration option is also available as command line argument.
 | `mqtt_tls_version`       | 'TLSv1.2'            | `--mqtt_tls_version`       | The TLS version to use for MQTT. One of TLSv1, TLSv1.1, TLSv1.2.                       |
 | `mqtt_verify_mode`       | 'CERT_REQUIRED'      | `--mqtt_verify_mode`       | The SSL certificate verification mode. One of CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED. |
 | `mqtt_ssl_ca_path`       | -                    | `--mqtt_ssl_ca_path`       | The SSL certificate authority file to verify the MQTT server.                          |
+| `mqtt_retain`            | false                |                            | Retain messages published on mqtt                                                      |
 | `mqtt_tls_no_verify`     | -                    | `--mqtt_tls_no_verify`     | Do not verify SSL/TLS constraints like hostname.                                       |
 | `knx_host`               | 'localhost'          | `--knx_host`               | The address of the KNX tunnel device.                                                  |
 | `knx_port`               | 3671                 | `--knx_port`               | The port of the KNX tunnel device.                                                     |
@@ -86,12 +87,18 @@ Then you can configure your bus topology as items.
             "address": "5/0/20",
             "type": "DPTHumidity"
         },
+        {
+            "override_topic": "use/this/on/mqtt"
+            "address": "5/0/29",
+            "type": "DPTHumidity"
+        },
         ...
     ]
     ...
 ```
 
 Each item need an `address` (the group address) and a `type`.
+Optionally you can specify `override_topic`, then the representation on mqtt will not be `1/2/3` (Adress) but the provided topic name.
 Unfortunately, the list of types is not part of the xknx documentation.
 But the examples in the file I provide with the project may fit for the most purposes.
 All supported types can be found in the [xknx sources](https://github.com/XKNX/xknx/blob/main/xknx/dpt/__init__.py).
