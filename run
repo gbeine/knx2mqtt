@@ -5,6 +5,6 @@
 # (c) Gerrit Beine, 2019-2023
 #
 
-. venv/bin/activate
+. /usr/local/lib/knx2mqtt/venv/bin/activate
 
-exec /usr/bin/env python knx2mqtt
+exec /usr/bin/env python3 /usr/local/lib/knx2mqtt/knx2mqtt
