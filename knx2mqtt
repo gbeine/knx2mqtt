@@ -6,6 +6,7 @@ import importlib
 import json
 import logging
 import os
+import signal
 import socket
 import ssl
 import sys
@@ -364,17 +365,35 @@ def init_items():
                 daemon_args.knx_subscribe.append(GroupAddress(item['address']))
 
 
+def shutdown(signum, frame):
+    global mqtt_client, knx_tunnel
+    logging.info('Shutdown...')
+    if mqtt_client is not None:
+        logging.info('Stopping MQTT')
+        mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+    logging.info('Bye!')
+    exit(0)
+
 def main():
     global daemon_args, mqtt_client
+
+    signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
+
+    # Configuration
     daemon_args = parse_args()
     parse_config()
     init_items()
+
     # Verbosity
     if daemon_args.verbose:
         logging.basicConfig(level=logging.DEBUG)
+
     # MQTT connection
     mqtt_client = init_mqtt()
     mqtt_client.loop_start()
+
     # KNX connection
     start_knx()
 
