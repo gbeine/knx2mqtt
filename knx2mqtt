@@ -181,13 +181,8 @@ def init_mqtt():
     if daemon_args.mqtt_tls:
         cert_reqs = verify_mode[daemon_args.mqtt_verify_mode] if daemon_args.mqtt_verify_mode in verify_mode else None
         tls_version = tls_versions[daemon_args.mqtt_tls_version] if daemon_args.mqtt_tls_version in tls_versions else None
-        if 'mqtt_ssl_ca_path' in daemon_args:
-            mqtt_client.tls_set(daemon_args.mqtt_ssl_ca_path)#, cert_reqs=cert_reqs, tls_version=tls_version)
-        elif cert_reqs is not None and tls_version is not None:
-            mqtt_client.tls_set(cert_reqs=cert_reqs, tls_version=tls_version)
-        else:
-            logging.error("Invalid TLS configuration.")
-            exit(255)
+        ca_certs = daemon_args.mqtt_ssl_ca_path if daemon_args.mqtt_ssl_ca_path else None
+        mqtt_client.tls_set(ca_certs=ca_certs, cert_reqs=cert_reqs, tls_version=tls_version)
         mqtt_client.tls_insecure_set(daemon_args.mqtt_tls_no_verify)
     if daemon_args.verbose:
         mqtt_client.enable_logger()
