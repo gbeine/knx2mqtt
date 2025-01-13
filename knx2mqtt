@@ -93,7 +93,7 @@ def create_payload_for_telegram(group_address, value):
             payload = DPTBinary(int(str(value).lower() in ['true', '1', 'on', 'yes']))
         else:
             dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
-            payload = DPTArray(dpt_class.to_knx(value))
+            payload = dpt_class.to_knx(value)
     except Exception as e:
         eprint(traceback.format_exc())
 
