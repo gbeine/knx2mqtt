@@ -19,7 +19,7 @@ from xknx import XKNX
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.io.knxip_interface import ConnectionType, ConnectionConfig
 from xknx.telegram.address import GroupAddress, IndividualAddress
-from xknx.telegram.apci import GroupValueWrite
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 from xknx.telegram import Telegram, TelegramDirection
 
 
@@ -140,6 +140,12 @@ def on_telegram_received(telegram):
     try:
         if telegram.direction != TelegramDirection.INCOMING:
             return
+
+        # Ignore telegrams that are not a "write" telegram. Some KNX systems will use `GroupValueRead` to request data, which will lead to errors because `GroupValueRead` does not have a `value` attribute.
+        if not isinstance(telegram, (GroupValueResponse, GroupValueWrite)):
+            logging.debug("ignoring telegram because it's not of type GroupValueResponse or GroupValueWrite: {}".format(telegram.payload))
+            return
+
         group_address = str(telegram.destination_address)
         payload = extract_payload_from_telegram(group_address, telegram)
 
