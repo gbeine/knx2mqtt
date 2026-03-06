@@ -1,19 +1,14 @@
 #!/usr/bin/env python
 
-import argparse
 import asyncio
 import importlib
-import json
 import logging
-import os
-import signal
 import socket
-import ssl
-import sys
 import time
 import traceback
 
-import paho.mqtt.client as mqtt
+import iot_daemonize
+import iot_daemonize.configuration as configuration
 
 from xknx import XKNX
 from xknx.dpt.dpt import DPTArray, DPTBinary
@@ -25,36 +20,19 @@ from xknx.telegram import Telegram, TelegramDirection
 
 XKNX_DPT_MODULE_STR = "xknx.dpt"
 
-verify_mode = {
-    'CERT_NONE': ssl.CERT_NONE,
-    'CERT_OPTIONAL': ssl.CERT_OPTIONAL,
-    'CERT_REQUIRED': ssl.CERT_REQUIRED
-}
-
-tls_versions = {
-    'TLSv1': ssl.PROTOCOL_TLSv1,
-    'TLSv1.1': ssl.PROTOCOL_TLSv1_1,
-    'TLSv1.2': ssl.PROTOCOL_TLSv1_2
-}
-
 
 knx_tunnel = None
-mqtt_client = None
-daemon_args = None
+config = None
 item_states = None
 
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-
 def get_dpt_type_for_address(group_address):
-    global daemon_args
+    global config
 
     dpt_type = None
 
-    if group_address in daemon_args.dpt_types:
-        dpt_type = daemon_args.dpt_types[group_address]
+    if group_address in config.dpt_types:
+        dpt_type = config.dpt_types[group_address]
 
     return dpt_type
 
@@ -76,7 +54,7 @@ def extract_payload_from_telegram(group_address, telegram):
             dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
             value = dpt_class.from_knx(payload.value)
     except Exception as e:
-        eprint(traceback.format_exc())
+        logging.error(traceback.format_exc())
 
     return value
 
@@ -95,17 +73,17 @@ def create_payload_for_telegram(group_address, value):
             dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
             payload = dpt_class.to_knx(value)
     except Exception as e:
-        eprint(traceback.format_exc())
+        logging.error(traceback.format_exc())
 
     return payload
 
 
 def publish_to_knx(address, payload):
-    global daemon_args, knx_tunnel
+    global config, knx_tunnel
 
     logging.info("Address: {}, Payload: {}".format(address, payload))
 
-    source_address = IndividualAddress(daemon_args.knx_individual_address)
+    source_address = IndividualAddress(config.knx_individual_address)
     group_address = GroupAddress(address)
     group_value = GroupValueWrite(payload)
 
@@ -117,23 +95,21 @@ def publish_to_knx(address, payload):
     )
 
     if knx_tunnel.started:
-        if daemon_args.knx_no_queue:
+        if config.knx_no_queue:
             asyncio.run(knx_tunnel.telegram_queue.process_telegram_outgoing(telegram))
         else:
             asyncio.run(knx_tunnel.telegrams.put(telegram))
 
 
 def publish_to_mqtt(address, value):
-    global mqtt_client, daemon_args, item_states
+    global item_states
 
-    topic = "{}/{}".format(daemon_args.mqtt_topic, address)
+    topic = "{}/{}".format(config.mqtt_topic, address)
 
     item_states[address] = str(value)
 
     logging.info("Topic: {}, Payload: {}".format(topic, value))
-    mqtt_client.publish(topic, str(value))
-    if daemon_args.timestamp:
-        mqtt_client.publish("{}/timestamp".format(topic), time.time(), retain=True)
+    iot_daemonize.mqtt_client.publish(topic, str(value))
 
 
 def on_telegram_received(telegram):
@@ -145,23 +121,23 @@ def on_telegram_received(telegram):
 
         publish_to_mqtt(group_address, payload)
     except Exception as e:
-        eprint(traceback.format_exc())
+        logging.error(traceback.format_exc())
 
 
 def on_mqtt_connect(client, userdata, flags, reason_code, properties):
-    global daemon_args
+    global config
 
-    for address in daemon_args.mqtt_subscribe:
-        topic = "{}/{}".format(daemon_args.mqtt_topic, address)
+    for address in config.mqtt_subscribe:
+        topic = "{}/{}".format(config.mqtt_topic, address)
         logging.info("Subscribe: {}".format(topic))
         client.subscribe(topic)
 
 
 def on_mqtt_received(client, userdata, message):
-    global daemon_args, item_states
+    global config, item_states
 
     try:
-        group_address = message.topic.replace("{}/".format(daemon_args.mqtt_topic), '')
+        group_address = message.topic.replace("{}/".format(config.mqtt_topic), '')
         value = str(message.payload.decode())
 
         if item_states[group_address] == value:
@@ -172,45 +148,25 @@ def on_mqtt_received(client, userdata, message):
 
         publish_to_knx(group_address, payload)
     except Exception as e:
-        eprint(traceback.format_exc())
-
-
-def init_mqtt():
-    logging.debug('Starting MQTT')
-    global daemon_args
-    mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, daemon_args.mqtt_clientid)
-    if daemon_args.mqtt_tls:
-        cert_reqs = verify_mode[daemon_args.mqtt_verify_mode] if daemon_args.mqtt_verify_mode in verify_mode else None
-        tls_version = tls_versions[daemon_args.mqtt_tls_version] if daemon_args.mqtt_tls_version in tls_versions else None
-        ca_certs = daemon_args.mqtt_ssl_ca_path if daemon_args.mqtt_ssl_ca_path else None
-        mqtt_client.tls_set(ca_certs=ca_certs, cert_reqs=cert_reqs, tls_version=tls_version)
-        mqtt_client.tls_insecure_set(daemon_args.mqtt_tls_no_verify)
-    if daemon_args.verbose:
-        mqtt_client.enable_logger()
-    if daemon_args.mqtt_user is not None and daemon_args.mqtt_password is not None:
-        mqtt_client.username_pw_set(daemon_args.mqtt_user, daemon_args.mqtt_password)
-    mqtt_client.on_connect = on_mqtt_connect
-    mqtt_client.on_message = on_mqtt_received
-    mqtt_client.connect(daemon_args.mqtt_host, daemon_args.mqtt_port, daemon_args.mqtt_keepalive)
-    return mqtt_client
+        logging.error(traceback.format_exc())
 
 
 def start_knx():
-    global daemon_args
+    global config
 
-    config = ConnectionConfig(
+    connection_config = ConnectionConfig(
             connection_type=ConnectionType.TUNNELING,
-            local_ip=daemon_args.knx_local_ip,
-            gateway_ip=socket.gethostbyname(daemon_args.knx_host),
-            gateway_port=daemon_args.knx_port
+            local_ip=config.knx_local_ip,
+            gateway_ip=socket.gethostbyname(config.knx_host),
+            gateway_port=config.knx_port
         )
 
     async def run():
         global knx_tunnel
-        knx_tunnel = XKNX(daemon_mode=True, connection_config=config)
+        knx_tunnel = XKNX(daemon_mode=True, connection_config=connection_config)
         knx_tunnel.telegram_queue.register_telegram_received_cb(
             telegram_received_cb=on_telegram_received,
-            group_addresses=daemon_args.knx_subscribe
+            group_addresses=config.knx_subscribe
         )
         await knx_tunnel.start()
         await knx_tunnel.stop()
@@ -218,137 +174,18 @@ def start_knx():
     asyncio.run(run())
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-            prog='knx2mqtt',
-            description='A KNX to MQTT bridge',
-            epilog='Have a lot of fun!')
-    parser.add_argument('-m', '--mqtt_host', type=str,
-            default='localhost',
-            help='The hostname of the MQTT server. Default is localhost')
-    parser.add_argument('--mqtt_port', type=int,
-            default=1883,
-            help='The port of the MQTT server. Default is 1883')
-    parser.add_argument('--mqtt_keepalive', type=int,
-            default=30,
-            help='The keep alive interval for the MQTT server connection in seconds. Default is 30')
-    parser.add_argument('--mqtt_clientid', type=str,
-            default='knx2mqtt',
-            help='The clientid to send to the MQTT server. Default is knx2mqtt')
-    parser.add_argument('-u', '--mqtt_user', type=str,
-            help='The username for the MQTT server connection.')
-    parser.add_argument('-p', '--mqtt_password', type=str,
-            help='The password for the MQTT server connection.')
-    parser.add_argument('-t', '--mqtt_topic', type=str,
-            default='bus/knx',
-            help='The topic to publish MQTT message. Default is bus/knx')
-    parser.add_argument('--mqtt_tls',
-            default=False,
-            action='store_true',
-            help='Use SSL/TLS encryption for MQTT connection.')
-    parser.add_argument('--mqtt_tls_version', type=str,
-            default='TLSv1.2',
-            help='The TLS version to use for MQTT. One of TLSv1, TLSv1.1, TLSv1.2. Default is TLSv1.2')
-    parser.add_argument('--mqtt_verify_mode', type=str,
-            default='CERT_REQUIRED',
-            help='The SSL certificate verification mode. One of CERT_NONE, CERT_OPTIONAL, CERT_REQUIRED. Default is CERT_REQUIRED')
-    parser.add_argument('--mqtt_ssl_ca_path', type=str,
-            help='The SSL certificate authority file to verify the MQTT server.')
-    parser.add_argument('--mqtt_tls_no_verify',
-            default=False,
-            action='store_true',
-            help='Do not verify SSL/TLS constraints like hostname.')
-    parser.add_argument('-k', '--knx_host', type=str,
-            default='localhost',
-            help='The hostname of the KNX gateway. Default is localhost')
-    parser.add_argument('--knx_port', type=int,
-            default=3671,
-            help='The port of the KNX gateway. Default is 3671')
-    parser.add_argument('--knx_local_ip', type=str,
-            help='The local ip address to connect the KNX gateway.')
-    parser.add_argument('--knx_individual_address', type=str,
-            default='15.15.248',
-            help='The group address to send KNX telegrams from. Default is 15.15.248')
-    parser.add_argument('--knx_no_queue',
-            default=False,
-            action='store_true',
-            help='Disable XKNX telegram queuing.')
-    parser.add_argument('-c', '--config', type=str,
-            default='/etc/knx2mqtt.conf',
-            help='The path to the config file. Default is /etc/knx2mqtt.conf')
-    parser.add_argument('-z', '--timestamp',
-            default=False,
-            action='store_true',
-            help='Publish timestamps for all topics, e.g. for monitoring purposes.')
-    parser.add_argument('-v', '--verbose',
-            default=False,
-            action='store_true',
-            help='Be verbose while running.')
-    args = parser.parse_args()
-    return args
-
-
-def parse_config():
-    global daemon_args
-
-    daemon_args.items = []
-
-    if not os.path.isfile(daemon_args.config):
-        return
-
-    with open(daemon_args.config, "r") as config_file:
-        data = json.load(config_file)
-        if 'mqtt_host' in data:
-            daemon_args.mqtt_host = data['mqtt_host']
-        if 'mqtt_port' in data:
-            daemon_args.mqtt_port = int(data['mqtt_port'])
-        if 'mqtt_keepalive' in data:
-            daemon_args.mqtt_keepalive = int(data['mqtt_keepalive'])
-        if 'mqtt_clientid' in data:
-            daemon_args.mqtt_clientid = data['mqtt_clientid']
-        if 'mqtt_user' in data:
-            daemon_args.mqtt_user = data['mqtt_user']
-        if 'mqtt_password' in data:
-            daemon_args.mqtt_password = data['mqtt_password']
-        if 'mqtt_topic' in data:
-            daemon_args.mqtt_topic = data['mqtt_topic']
-        if 'mqtt_tls' in data:
-            daemon_args.mqtt_tls = data['mqtt_tls'].lower() == 'true'
-        if 'mqtt_tls_version' in data:
-            daemon_args.mqtt_tls_version = data['mqtt_tls_version']
-        if 'mqtt_verify_mode' in data:
-            daemon_args.mqtt_verify_mode = data['mqtt_verify_mode']
-        if 'mqtt_ssl_ca_path' in data:
-            daemon_args.mqtt_ssl_ca_path = data['mqtt_ssl_ca_path']
-        if 'mqtt_tls_no_verify' in data:
-            daemon_args.mqtt_tls_no_verify = data['mqtt_tls_no_verify'].lower() == 'true'
-        if 'knx_host' in data:
-            daemon_args.knx_host = data['knx_host']
-        if 'knx_port' in data:
-            daemon_args.knx_port = int(data['knx_port'])
-        if 'knx_local_ip' in data:
-            daemon_args.knx_local_ip = data['knx_local_ip']
-        if 'knx_individual_address' in data:
-            daemon_args.knx_individual_address = data['knx_individual_address']
-        if 'knx_no_queue' in data:
-            daemon_args.knx_no_queue = data['knx_no_queue'].lower() == 'true'
-        if 'timestamp' in data:
-            daemon_args.timestamp = data['timestamp'].lower() == 'true'
-        if 'verbose' in data:
-            daemon_args.verbose = data['verbose'].lower() == 'true'
-        if 'items' in data:
-            daemon_args.items = data['items']
-
-
 def init_items():
-    global daemon_args, item_states
+    global config, item_states
 
-    daemon_args.dpt_types = {}
-    daemon_args.mqtt_subscribe = []
-    daemon_args.knx_subscribe = []
+    config.dpt_types = {}
+    config.mqtt_subscribe = []
+    config.knx_subscribe = []
     item_states = {}
 
-    for item in daemon_args.items:
+    if config.items is None:
+        return
+
+    for item in config.items:
         if not 'knx_subscribe' in item:
             item['knx_subscribe'] = True
         if not 'mqtt_subscribe' in item:
@@ -358,43 +195,50 @@ def init_items():
             item_states[item['address']] = None
 
             if 'type' in item:
-                daemon_args.dpt_types[item['address']] = item['type']
+                config.dpt_types[item['address']] = item['type']
             if item['mqtt_subscribe']:
-                daemon_args.mqtt_subscribe.append(item['address'])
+                config.mqtt_subscribe.append(item['address'])
             if item['knx_subscribe']:
-                daemon_args.knx_subscribe.append(GroupAddress(item['address']))
+                config.knx_subscribe.append(GroupAddress(item['address']))
 
-
-def shutdown(signum, frame):
-    global mqtt_client, knx_tunnel
-    logging.info('Shutdown...')
-    if mqtt_client is not None:
-        logging.info('Stopping MQTT')
-        mqtt_client.loop_stop()
-        mqtt_client.disconnect()
-    logging.info('Bye!')
-    exit(0)
 
 def main():
-    global daemon_args, mqtt_client
+    global config
 
-    signal.signal(signal.SIGINT, shutdown)
-    signal.signal(signal.SIGTERM, shutdown)
-
-    # Configuration
-    daemon_args = parse_args()
-    parse_config()
+    config = configuration.MqttDaemonConfiguration(
+        program='knx2mqtt',
+        description='A KNX to MQTT bridge')
+    config.add_config_arg('mqtt_clientid', flags='--mqtt_clientid', default='knx2mqtt',
+                     help='The clientid to send to the MQTT server. Default is knx2mqtt.')
+    config.add_config_arg('mqtt_topic', flags='--mqtt_topic', default='bus/knx',
+                     help='The topic to publish MQTT message. Default is bus/knx.')
+    config.add_config_arg('knx_host', flags=['-k', '--knx_host'], default='localhost',
+                     help='The hostname of the KNX gateway. Default is localhost.')
+    config.add_config_arg('knx_port', flags=['--knx_port'], default=3671,
+                     help='The port of the KNX gateway. Default is 3671.')
+    config.add_config_arg('knx_local_ip', flags=['--knx_local_ip'],
+                     help='The local ip address to connect the KNX gateway.')
+    config.add_config_arg('knx_individual_address', flags=['--knx_individual_address'],
+                     default='15.15.248',
+                     help='The group address to send KNX telegrams from. Default is 15.15.248.')
+    config.add_config_arg('knx_no_queue', flags=['--knx_no_queue'], default=False,
+                     action='store_true',
+                     help='Disable XKNX telegram queuing.')
+    config.add_config_arg('config', flags=['-c', '--config'], default='/etc/knx2mqtt.conf',
+                     help='The path to the config file. Default is /etc/knx2mqtt.conf.')
+    config.add_config_arg('items',
+                     help='The KNX items configuration.')
+    config.parse_args()
+    config.parse_config(config.config)
     init_items()
 
-    # Verbosity
-    if daemon_args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    iot_daemonize.init(config, mqtt=True)
 
-    # MQTT connection
-    mqtt_client = init_mqtt()
-    mqtt_client.loop_start()
+    # Set MQTT callbacks for bidirectional communication
+    iot_daemonize.mqtt_client._mqtt_client.on_connect = on_mqtt_connect
+    iot_daemonize.mqtt_client._mqtt_client.on_message = on_mqtt_received
 
-    # KNX connection
+    iot_daemonize.run()
     start_knx()
 
 
