@@ -230,9 +230,10 @@ def main():
                      help='The KNX items configuration.')
     config.parse_args()
     config.parse_config(config.config)
-    init_items()
 
     iot_daemonize.init(config, mqtt=True)
+
+    init_items()
 
     # Set MQTT callbacks for bidirectional communication
     iot_daemonize.mqtt_client._mqtt_client.on_connect = on_mqtt_connect
