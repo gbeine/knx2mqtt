@@ -5,16 +5,8 @@ on:
 
 jobs:
   build:
-    runs-on: docker
-    container:
-      image: node:22-alpine
-      env:
-        DOCKER_HOST: ${{ vars.DOCKER_HOST }}
+    runs-on: ubuntu-latest
     steps:
-      - name: Install docker
-        run: |
-          apk add --no-cache docker
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
