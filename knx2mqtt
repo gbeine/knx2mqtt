@@ -117,8 +117,8 @@ def on_telegram_received(telegram):
         if telegram.direction != TelegramDirection.INCOMING:
             return
 
-        # Ignore telegrams that are not a "write" telegram. Some KNX systems will use `GroupValueRead` to request data, which will lead to errors because `GroupValueRead` does not have a `value` attribute.
-        if not isinstance(telegram, (GroupValueResponse, GroupValueWrite)):
+        # GroupValueRead carries no value; only writes and responses can be published.
+        if not isinstance(telegram.payload, (GroupValueResponse, GroupValueWrite)):
             logging.debug("ignoring telegram because it's not of type GroupValueResponse or GroupValueWrite: {}".format(telegram.payload))
             return
 
