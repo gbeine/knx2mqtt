@@ -108,6 +108,19 @@ All values are published using the group address and the MQTT topic.
 
 So, the Date exposing sensor in the example is listening for `bus/knx/0/0/1` and the switch is listening on and publishing to `bus/knx/0/1/1`.
 
+### Payload format
+
+Payloads are plain strings. What is published for a group address depends on its `type`:
+
+| type                                              | published            | accepted on subscribe                       |
+|---------------------------------------------------|----------------------|---------------------------------------------|
+| `DPTBinary`                                       | `0` or `1`           | `true`, `1`, `on`, `yes` -> 1, anything else -> 0 |
+| enum types (`DPTSwitch`, `DPTUpDown`, `DPTStep`, `DPTHVACMode`, `DPTHVACContrMode`, ...) | the enum member name, e.g. `ON`, `OFF`, `UP`, `DOWN`, `COMFORT` | the same names, case-insensitive |
+| numeric types (`DPTScaling`, `DPTTemperature`, ...) | the number, e.g. `50` or `21.5` | a number |
+| `DPTString`                                       | the string           | a string of at most 14 characters           |
+
+Because published and accepted values use the same vocabulary, a value read from one topic can be written back to another without translation.
+
 ## Running knx2mqtt
 
 I use [systemd](https://systemd.io/) to manage my local services.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import asyncio
+import enum
 import importlib
 import logging
 import socket
@@ -53,6 +54,10 @@ def extract_payload_from_telegram(group_address, telegram):
                 dpt_type = payload.value.__class__.__name__
             dpt_class = getattr(importlib.import_module(XKNX_DPT_MODULE_STR), dpt_type)
             value = dpt_class.from_knx(payload.value)
+            # xknx returns enums for 1-bit and 20.xxx types; publish the bare name
+            # (ON, DOWN, COMFORT) because that is what to_knx() accepts on the way back.
+            if isinstance(value, enum.Enum):
+                value = value.name
     except Exception as e:
         logging.error(traceback.format_exc())
 
