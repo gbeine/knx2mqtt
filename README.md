@@ -60,6 +60,7 @@ Each configuration option is also available as command line argument.
 | `knx_local_ip`           | -                    | `--knx_local_ip`           | The ip address of the system that connects to KNX.                                     |
 | `knx_individual_address` | -                    | `--knx_individual_address` | The group address of the system that send telegrams to KNX.                            |
 | `knx_no_queue`           | -                    | `--knx_no_queue`           | Workaround for scheduling problems of XKNX telegram queue.                             |
+| `knx_threadsafe`         | -                    | `--knx_threadsafe`         | Hand telegrams over to the XKNX event loop thread-safe. Takes precedence over `knx_no_queue`.                 |
 | `timestamp`              | -                    | `-z`, `--timestamp`        | Publish timestamps for all topics, e.g. for monitoring purposes.                       |
 | `verbose`                | -                    | `-v`, `--verbose`          | Be verbose while running.                                                              |
 | -                        | '/etc/knx2mqtt.conf' | `-c`, `--config`           | The path to the config file.                                                           |

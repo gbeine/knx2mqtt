@@ -23,6 +23,7 @@ XKNX_DPT_MODULE_STR = "xknx.dpt"
 
 
 knx_tunnel = None
+knx_loop = None
 config = None
 item_states = None
 
@@ -100,7 +101,18 @@ def publish_to_knx(address, payload):
     )
 
     if knx_tunnel.started:
-        if config.knx_no_queue:
+        if config.knx_threadsafe:
+            if knx_loop is None:
+                logging.warning("KNX loop not running, dropping telegram for {}".format(address))
+                return
+            if payload is None:
+                logging.error("No payload for {}, dropping telegram".format(address))
+                return
+            # This runs on paho's thread. The queue and the tunnel's ACK handling belong
+            # to the loop in start_knx(); using asyncio.run() here makes xknx wait for its
+            # full ACK timeout on every telegram.
+            knx_loop.call_soon_threadsafe(knx_tunnel.telegrams.put_nowait, telegram)
+        elif config.knx_no_queue:
             asyncio.run(knx_tunnel.telegram_queue.process_telegram_outgoing(telegram))
         else:
             asyncio.run(knx_tunnel.telegrams.put(telegram))
@@ -173,7 +185,8 @@ def start_knx():
         )
 
     async def run():
-        global knx_tunnel
+        global knx_tunnel, knx_loop
+        knx_loop = asyncio.get_running_loop()
         knx_tunnel = XKNX(daemon_mode=True, connection_config=connection_config)
         knx_tunnel.telegram_queue.register_telegram_received_cb(
             telegram_received_cb=on_telegram_received,
@@ -232,6 +245,9 @@ def main():
     config.add_config_arg('knx_individual_address', flags=['--knx_individual_address'],
                      default='15.15.248',
                      help='The group address to send KNX telegrams from. Default is 15.15.248.')
+    config.add_config_arg('knx_threadsafe', flags=['--knx_threadsafe'], default=False,
+                     action='store_true',
+                     help='Hand telegrams over to the XKNX event loop thread-safe. Takes precedence over knx_no_queue.')
     config.add_config_arg('knx_no_queue', flags=['--knx_no_queue'], default=False,
                      action='store_true',
                      help='Disable XKNX telegram queuing.')
